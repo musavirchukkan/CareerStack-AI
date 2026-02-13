@@ -23,36 +23,22 @@ body {
 }
 
 .container {
-  max-width: 800px;
-  margin: 2rem auto;
-  padding: 0 1rem;
+  max-width: 800px; /* Kept for options page compatibility */
+  margin: 0 auto;
+  padding: 1rem;
 }
 
-/* Card Styles */
-.card {
-  background: var(--card-bg);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 2rem;
-  margin-bottom: 2rem;
-  border: 1px solid var(--border-color);
-}
-
-h1,
-h2,
-h3 {
-  margin-top: 0;
-  color: var(--text-primary);
-}
-
+/* Typography */
 h1 {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
+  color: var(--text-primary);
   margin-bottom: 1.5rem;
+  text-align: center;
 }
 
 h2 {
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: 600;
   margin-bottom: 1rem;
   padding-bottom: 0.5rem;
@@ -61,26 +47,33 @@ h2 {
 
 /* Form Styles */
 .form-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem; /* Increased spacing */
 }
 
 label {
   display: block;
-  font-weight: 500;
+  font-size: 0.75rem; /* Smaller */
+  font-weight: 600; /* Bolder */
+  text-transform: uppercase; /* Uppercase */
+  letter-spacing: 0.05em;
   margin-bottom: 0.5rem;
-  color: var(--text-primary);
+  color: var(--text-secondary); /* Softer color for labels */
 }
 
 input[type="text"],
+input[type="url"],
+input[type="email"],
 input[type="password"],
 select,
 textarea {
   width: 100%;
-  padding: 0.75rem;
+  padding: 0.6rem 0.75rem;
   border: 1px solid var(--border-color);
   border-radius: var(--radius);
-  font-size: 0.95rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  background-color: white;
+  transition: all 0.2s ease;
   box-sizing: border-box;
   font-family: inherit;
 }
@@ -90,84 +83,224 @@ select:focus,
 textarea:focus {
   outline: none;
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); /* Blue glow */
 }
 
 textarea {
-  min-height: 150px;
+  min-height: 80px;
   resize: vertical;
 }
 
-.helper-text {
-  font-size: 0.875rem;
+/* Specific styling for Read-only / disabled inputs to look like badges */
+input[readonly],
+input:disabled {
+  background-color: #f1f5f9;
   color: var(--text-secondary);
-  margin-top: 0.5rem;
+  border-color: transparent;
+  cursor: default;
+}
+
+/* Special styling for the Job Link to make it look clickable/copyable */
+#link {
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: var(--primary-color);
+  background-color: rgba(37, 99, 235, 0.05);
+  border: 1px dashed var(--primary-color);
+  cursor: text;
 }
 
 /* Buttons */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem 1.5rem;
+  padding: 0.75rem;
   border-radius: var(--radius);
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  border: none;
+  border: 1px solid transparent;
   transition: all 0.2s;
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
 
 .btn-primary {
   background-color: var(--primary-color);
   color: white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .btn-primary:hover {
   background-color: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+/* Ghost / Outline Button for Secondary Action */
+.btn-secondary {
+  background-color: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+  background-color: #f8fafc;
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
 }
 
 .btn:disabled {
   opacity: 0.7;
   cursor: not-allowed;
+  transform: none;
 }
 
-/* Status Message */
+/* Status Messages */
 #status {
   position: fixed;
-  bottom: 2rem;
-  right: 2rem;
-  background: var(--text-primary);
-  color: white;
-  padding: 1rem;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  text-align: center;
+  font-size: 0.9rem;
+  padding: 0.75rem;
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   display: none;
-  animation: slideIn 0.3s ease-out;
+  z-index: 100;
+  animation: slideUp 0.3s ease-out;
 }
 
 #status.success {
   background-color: var(--success-color);
+  color: white;
 }
 
 #status.error {
   background-color: var(--error-color);
+  color: white;
 }
 
-@keyframes slideIn {
+@keyframes slideUp {
   from {
-    transform: translateY(20px);
+    transform: translate(-50%, 20px);
     opacity: 0;
   }
   to {
-    transform: translateY(0);
+    transform: translate(-50%, 0);
     opacity: 1;
   }
 }
 
-/* Popup Specifics (will reuse later) */
-.popup-container {
-  width: 400px;
-  padding: 1rem;
-  margin: 0;
+.score-badge {
+  background: var(--text-primary);
+  color: white;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  float: right;
+}
+
+/* Utility */
+.hidden {
+  display: none !important;
+}
+
+#loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+/* Options Page Specifics */
+.options-page {
+  background-color: #f1f5f9;
+  min-height: 100vh;
+  padding: 2rem 0;
+}
+
+.options-page .container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.options-page h1 {
+  font-size: 1.75rem;
+  margin-bottom: 2rem;
+  color: #0f172a;
+  text-align: center;
+}
+
+.options-page .card {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  border: 1px solid #e2e8f0;
+  margin-bottom: 2rem;
+}
+
+.options-page h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 0.75rem;
+}
+
+.options-page .helper-text {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-top: 0.5rem;
+}
+
+.options-page .btn-primary {
+  width: auto;
+  min-width: 200px;
+  justify-content: center;
+  font-size: 1rem;
+  padding: 0.875rem 2rem;
+}
+
+/* Layout adjustments */
+.options-page .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.options-page label {
+  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+}
+
+/* Checkbox specific */
+.options-page .checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  text-transform: none;
+  font-weight: 500;
+}
+
+.options-page input[type="checkbox"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 4px;
+  border: 1px solid #cbd5e1;
+  cursor: pointer;
 }

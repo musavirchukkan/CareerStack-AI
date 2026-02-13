@@ -52,30 +52,37 @@ async function handleAIAnalysis(jobDescription) {
 }
 
 async function callGemini(apiKey, prompt) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+    // Updated to Gemini 3 Flash for high-performance and lower token cost
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
+
     const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }]
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+                // Forces the model to output a valid JSON object
+                response_mime_type: "application/json"
+            }
         })
     });
 
     const data = await response.json();
     if (!response.ok) throw new Error(data.error?.message || 'Gemini API Error');
 
-    const text = data.candidates[0].content.parts[0].text;
     try {
-        // Clean markdown code blocks if present
-        const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        const text = data.candidates[0].content.parts[0].text;
+        // Clean markdown and parse
+        const jsonStr = text.replace(/```json|```/g, '').trim();
         return { success: true, data: JSON.parse(jsonStr) };
     } catch (e) {
-        return { error: 'Failed to parse AI response' };
+        return { error: 'Failed to parse Gemini response', raw: data };
     }
 }
 
 async function callOpenAI(apiKey, prompt) {
     const url = 'https://api.openai.com/v1/chat/completions';
+
     const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -83,21 +90,22 @@ async function callOpenAI(apiKey, prompt) {
             'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-            model: 'gpt-3.5-turbo',
+            // Updated to GPT-4o-mini: faster and smarter than 3.5-turbo
+            model: 'gpt-4o-mini',
             messages: [{ role: 'user', content: prompt }],
-            temperature: 0.7
+            response_format: { "type": "json_object" }, // Ensures JSON output
+            temperature: 0.1 // Lower temperature for more consistent data extraction
         })
     });
 
     const data = await response.json();
     if (!response.ok) throw new Error(data.error?.message || 'OpenAI API Error');
 
-    const text = data.choices[0].message.content;
     try {
-        const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
-        return { success: true, data: JSON.parse(jsonStr) };
+        const text = data.choices[0].message.content;
+        return { success: true, data: JSON.parse(text) };
     } catch (e) {
-        return { error: 'Failed to parse AI response' };
+        return { error: 'Failed to parse OpenAI response', raw: data };
     }
 }
 

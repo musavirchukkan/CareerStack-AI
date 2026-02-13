@@ -1,15 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CareerStack AI Settings</title>
     <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+
+<body class="options-page">
     <div class="container">
         <h1>CareerStack AI Configuration</h1>
-        
+
         <form id="options-form">
             <!-- Notion Settings -->
             <div class="card">
@@ -17,7 +19,8 @@
                 <div class="form-group">
                     <label for="notionSecret">Notion Integration Secret</label>
                     <input type="password" id="notionSecret" placeholder="secret_..." required>
-                    <p class="helper-text">Create an integration at <a href="https://www.notion.so/my-integrations" target="_blank">notion.so/my-integrations</a></p>
+                    <p class="helper-text">Create an integration at <a href="https://www.notion.so/my-integrations"
+                            target="_blank">notion.so/my-integrations</a></p>
                 </div>
                 <div class="form-group">
                     <label for="databaseId">Database ID</label>
@@ -48,15 +51,16 @@
                 <h2>Your Profile</h2>
                 <div class="form-group">
                     <label for="masterResume">Master Resume</label>
-                    <textarea id="masterResume" placeholder="Paste your full resume text or markdown here..."></textarea>
+                    <textarea id="masterResume"
+                        placeholder="Paste your full resume text or markdown here..."></textarea>
                     <p class="helper-text">The AI uses this to compare your profile against job descriptions.</p>
                 </div>
-                
+
                 <div class="form-group">
-                   <label class="checkbox-label" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                       <input type="checkbox" id="autoFetch" style="width: auto;">
-                       <span>Auto-fetch job details on page load</span>
-                   </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="autoFetch">
+                        <span>Auto-fetch job details on page load</span>
+                    </label>
                 </div>
             </div>
 
@@ -70,4 +74,5 @@
 
     <script src="options.js"></script>
 </body>
+
 </html>
