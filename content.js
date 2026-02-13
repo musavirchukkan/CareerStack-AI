@@ -71,12 +71,56 @@ function scrapeLinkedIn(data) {
         }
 
         // Apply Link
-        // "Easy Apply" usually means internal. External apply is a simple link.
-        const applyBtn = detailContainer.querySelector('.jobs-apply-button--top-card button');
-        if (applyBtn) {
-            // If it's a link styled as button
-            const link = applyBtn.closest('a');
-            if (link) data.appLink = link.href;
+        // Try multiple selectors for the apply button/link
+        const applySelectors = [
+            '.jobs-apply-button--top-card a',
+            '.jobs-apply-button--top-card button',
+            '.jobs-s-apply button',
+            '[data-control-name="jobdetails_topcard_inapply"]',
+            '.jobs-unified-top-card__start-application-button'
+        ];
+
+        for (const selector of applySelectors) {
+            const el = detailContainer.querySelector(selector);
+            if (el) {
+                // If it's an A tag, get href
+                if (el.tagName === 'A') {
+                    data.appLink = el.href;
+                    break;
+                }
+                // If it's a button, check parent or window.open logic
+                const parentLink = el.closest('a');
+                if (parentLink) {
+                    data.appLink = parentLink.href;
+                    break;
+                }
+            }
+        }
+
+        // Fallback: Use heuristics - find a button/link with text "Apply" in the top card area
+        if (!data.appLink) {
+            const topCard = detailContainer.querySelector('.job-details-jobs-unified-top-card__content--two-pane') ||
+                detailContainer.querySelector('.jobs-unified-top-card') ||
+                detailContainer;
+
+            const buttons = topCard.querySelectorAll('button, a');
+            for (const btn of buttons) {
+                const text = btn.innerText || '';
+                const aria = btn.getAttribute('aria-label') || '';
+                if (text.includes('Apply') || aria.includes('Apply')) {
+                    // If it's a link, use it
+                    if (btn.tagName === 'A') {
+                        data.appLink = btn.href;
+                        break;
+                    }
+                    // If button is wrapped in link
+                    const parentLink = btn.closest('a');
+                    if (parentLink) {
+                        data.appLink = parentLink.href;
+                        break;
+                    }
+                }
+            }
         }
     }
 
@@ -94,6 +138,47 @@ function scrapeLinkedIn(data) {
             data.description = text;
             data.descriptionBlocks = blocks;
         }
+    }
+
+    // Apply Link (Direct Page)
+    const applyBtn = document.querySelector('a[aria-label^="Apply on company website"]');
+    if (applyBtn) {
+        // LinkedIn sometimes wraps external links in a redirect
+        const url = new URL(applyBtn.href);
+        // If it's a redirect, decode the 'url' param
+        if (url.hostname === 'www.linkedin.com' && url.pathname.includes('/redirect')) {
+            const target = url.searchParams.get('url');
+            if (target) data.appLink = target;
+        } else {
+            data.appLink = applyBtn.href;
+        }
+    }
+
+
+    // Last Resort: Check LD-JSON script tags for JobPosting schema
+    if (!data.appLink) {
+        try {
+            const scripts = document.querySelectorAll('script[type="application/ld+json"]');
+            for (const script of scripts) {
+                try {
+                    const json = JSON.parse(script.innerText);
+                    const job = Array.isArray(json)
+                        ? json.find(j => j['@type'] === 'JobPosting')
+                        : (json['@type'] === 'JobPosting' ? json : null);
+
+                    if (job) {
+                        if (job.url) {
+                            data.appLink = job.url;
+                            break;
+                        }
+                        if (job.applyUrl) {
+                            data.appLink = job.applyUrl;
+                            break;
+                        }
+                    }
+                } catch (e) { /* ignore parse errors */ }
+            }
+        } catch (e) { console.log('Error parsing LD-JSON', e); }
     }
 
     // Fallback cleanup
