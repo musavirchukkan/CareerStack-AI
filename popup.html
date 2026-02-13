@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareerStack AI</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            width: 400px;
+            min-height: 500px;
+            padding: 1rem;
+            margin: 0;
+            background-color: var(--bg-color);
+        }
+
+        .container {
+            margin: 0;
+            padding: 0;
+            max-width: none;
+        }
+
+        h1 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            color: var(--primary-color);
+        }
+
+        .field-row {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .field-row .form-group {
+            flex: 1;
+        }
+
+        textarea.small {
+            min-height: 60px;
+        }
+
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn-secondary {
+            background-color: white;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: #f1f5f9;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+
+        .score-badge {
+            background: var(--text-primary);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            float: right;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loading">Loading job details...</div>
+
+    <div id="main-content" class="container hidden">
+        <h1>CareerStack AI</h1>
+
+        <form id="job-form">
+            <div class="field-row">
+                <div class="form-group">
+                    <label for="company">Company <span style="color:red">*</span></label>
+                    <input type="text" id="company" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="platform">Platform</label>
+                    <select id="platform">
+                        <option value="LinkedIn">LinkedIn</option>
+                        <option value="Indeed">Indeed</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="position">Position <span style="color:red">*</span></label>
+                <input type="text" id="position" required>
+            </div>
+
+            <div class="field-row">
+                <div class="form-group">
+                    <label for="salary">Salary</label>
+                    <input type="text" id="salary" placeholder="$100k - $120k">
+                </div>
+                <div class="form-group">
+                    <label for="email">Recruiter Email</label>
+                    <input type="email" id="email" placeholder="Extracting...">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="link">Job Link</label>
+                <input type="url" id="link" readonly style="background-color: #f1f5f9;">
+            </div>
+
+            <div class="form-group">
+                <label for="appLink">Application Link (External)</label>
+                <input type="url" id="appLink">
+            </div>
+
+            <div class="form-group">
+                <label for="aiScore">Match Score <span id="scoreDisplay" class="score-badge">--</span></label>
+                <textarea id="aiAnalysis" class="small" placeholder="AI Analysis will appear here..."
+                    readonly></textarea>
+            </div>
+
+            <!-- Hidden field for full description -->
+            <input type="hidden" id="fullDescription">
+
+            <div class="actions">
+                <button type="button" id="analyzeBtn" class="btn btn-secondary">
+                    ✨ Run AI Analysis
+                </button>
+                <button type="submit" id="saveBtn" class="btn btn-primary">
+                    Save to Notion
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div id="status"></div>
+
+    <script src="popup.js"></script>
+</body>
+
+</html>
