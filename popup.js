@@ -66,6 +66,11 @@ function populateForm(data) {
 
     // Full description (hidden)
     if (data.description) document.getElementById('fullDescription').value = data.description;
+
+    // Store blocks in a hidden data attribute or global variable for saving
+    if (data.descriptionBlocks) {
+        window.jobDescriptionBlocks = data.descriptionBlocks;
+    }
 }
 
 async function runAIAnalysis() {
@@ -114,6 +119,7 @@ async function saveToNotion(e) {
         email: document.getElementById('email').value,
         score: document.getElementById('scoreDisplay').textContent.replace('/100', '').replace('--', '0'),
         description: document.getElementById('fullDescription').value,
+        descriptionBlocks: window.jobDescriptionBlocks || [],
         summary: document.getElementById('aiAnalysis').value
     };
 

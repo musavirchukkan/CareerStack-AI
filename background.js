@@ -131,11 +131,37 @@ async function handleSaveToNotion(data) {
                     heading_2: {
                         rich_text: [{ text: { content: 'Job Description' } }]
                     }
-                },
-                // Chunk description (Notion limit 2000 chars per block)
-                ...chunkTextToBlocks(data.description)
+                }
             ]
         };
+
+
+        // Add description blocks
+        if (data.descriptionBlocks && data.descriptionBlocks.length > 0) {
+            const notionBlocks = data.descriptionBlocks.map(createNotionBlock).filter(b => b);
+            body.children.push(...notionBlocks);
+        } else {
+            // Fallback to text chunking if no structured data
+            body.children.push(...chunkTextToBlocks(data.description));
+        }
+
+        // Add summary if available
+        if (data.summary) {
+            body.children.push({
+                object: 'block',
+                type: 'heading_2',
+                heading_2: {
+                    rich_text: [{ text: { content: 'AI Summary' } }]
+                }
+            });
+            body.children.push({
+                object: 'block',
+                type: 'paragraph',
+                paragraph: {
+                    rich_text: [{ text: { content: data.summary } }]
+                }
+            });
+        }
 
         const response = await fetch('https://api.notion.com/v1/pages', {
             method: 'POST',
@@ -160,6 +186,61 @@ async function handleSaveToNotion(data) {
     }
 }
 
+function createNotionBlock(block) {
+    if (!block) return null;
+
+    // Helper to construct rich_text array for Notion
+    let notionRichText = [];
+
+    if (block.richText && Array.isArray(block.richText)) {
+        notionRichText = block.richText.map(segment => ({
+            type: 'text',
+            text: { content: segment.text.substring(0, 2000) }, // Safety truncate per segment
+            annotations: {
+                bold: segment.annotations ? segment.annotations.bold : false,
+                italic: segment.annotations ? segment.annotations.italic : false
+            }
+        }));
+    } else if (block.content) {
+        // Fallback for plain text blocks
+        notionRichText = [{
+            type: 'text',
+            text: { content: block.content.substring(0, 2000) }
+        }];
+    } else {
+        return null;
+    }
+
+    if (block.type === 'heading_2') {
+        return {
+            object: 'block',
+            type: 'heading_3', // Map H2 to H3 for better visual hierarchy within the entry
+            heading_3: {
+                rich_text: notionRichText
+            }
+        };
+    }
+
+    if (block.type === 'bulleted_list_item') {
+        return {
+            object: 'block',
+            type: 'bulleted_list_item',
+            bulleted_list_item: {
+                rich_text: notionRichText
+            }
+        };
+    }
+
+    // Default to paragraph
+    return {
+        object: 'block',
+        type: 'paragraph',
+        paragraph: {
+            rich_text: notionRichText
+        }
+    };
+}
+
 function chunkTextToBlocks(text) {
     if (!text) return [];
     const blocks = [];
@@ -167,8 +248,26 @@ function chunkTextToBlocks(text) {
 
     // Split text into chunks that fit within Notion's 2000 char limit
     // We try to split at newlines to avoid breaking words mid-sentence where possible
-    for (let i = 0; i < text.length; i += chunkSize) {
-        let chunk = text.substring(i, Math.min(i + chunkSize, text.length));
+    for (let i = 0; i < text.length;) { // Remove 'i += chunkSize' from loop header
+        let limit = Math.min(i + chunkSize, text.length);
+        let end = limit;
+
+        // If we strictly check for length, we might be in the middle of a word or sentence.
+        // Try to find a newline close to the limit to break cleanly.
+        if (end < text.length) {
+            const lastNewline = text.lastIndexOf('\n', end);
+            if (lastNewline > i) { // Ensure found newline is within current chunk
+                end = lastNewline + 1; // Include the newline
+            } else {
+                // No newline found in this large chunk, try space?
+                const lastSpace = text.lastIndexOf(' ', end);
+                if (lastSpace > i) {
+                    end = lastSpace + 1;
+                }
+            }
+        }
+
+        let chunk = text.substring(i, end);
         blocks.push({
             object: 'block',
             type: 'paragraph',
@@ -176,6 +275,8 @@ function chunkTextToBlocks(text) {
                 rich_text: [{ text: { content: chunk } }]
             }
         });
+
+        i = end; // Advance to where we cut off
     }
     return blocks;
 }
