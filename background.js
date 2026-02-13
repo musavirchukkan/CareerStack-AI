@@ -121,7 +121,14 @@ async function handleSaveToNotion(data) {
         const body = {
             parent: { database_id: settings.databaseId },
             properties: {
-                "Company": { title: [{ text: { content: data.company || 'Unknown Company' } }] },
+                "Company": {
+                    title: [{
+                        text: {
+                            content: data.company || 'Unknown Company',
+                            link: data.companyUrl ? { url: data.companyUrl } : null
+                        }
+                    }]
+                },
                 "Position": { rich_text: [{ text: { content: data.position || 'Unknown Position' } }] },
                 "Status": { status: { name: data.status || "Not Applied" } },
                 "Platform": { select: { name: data.platform || "Other" } },

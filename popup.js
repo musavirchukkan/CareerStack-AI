@@ -24,7 +24,7 @@ async function initializePopup() {
                 console.log("No response from content script");
             }
         } catch (error) {
-            console.error(error);
+            console.warn('Initial connection to content script failed. Attempting to inject...', error.message);
             // Try injecting script if not present (optional, but good for stability)
             try {
                 await chrome.scripting.executeScript({
@@ -64,10 +64,13 @@ function populateForm(data) {
     // Application Link (if scraped external link)
     if (data.appLink) document.getElementById('appLink').value = data.appLink;
 
+    // Company Profile URL
+    if (data.companyUrl) document.getElementById('companyUrl').value = data.companyUrl;
+
     // Full description (hidden)
     if (data.description) document.getElementById('fullDescription').value = data.description;
 
-    // Store blocks in a hidden data attribute or global variable for saving
+    // Store blocks
     if (data.descriptionBlocks) {
         window.jobDescriptionBlocks = data.descriptionBlocks;
     }
@@ -117,6 +120,7 @@ async function saveToNotion(e) {
         salary: document.getElementById('salary').value,
         link: document.getElementById('link').value,
         appLink: document.getElementById('appLink').value,
+        companyUrl: document.getElementById('companyUrl').value,
         email: document.getElementById('email').value,
         score: document.getElementById('scoreDisplay').textContent.replace('/100', '').replace('--', '0'),
         description: document.getElementById('fullDescription').value,

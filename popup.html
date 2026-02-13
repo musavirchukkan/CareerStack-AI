@@ -86,6 +86,8 @@
         <h1>CareerStack AI</h1>
 
         <form id="job-form">
+            <input type="hidden" id="companyUrl">
+            <input type="hidden" id="fullDescription">
             <div class="form-group">
                 <label for="company">Company <span style="color:red">*</span></label>
                 <input type="text" id="company" required>
@@ -143,8 +145,7 @@
                     readonly></textarea>
             </div>
 
-            <!-- Hidden field for full description -->
-            <input type="hidden" id="fullDescription">
+
 
             <div class="actions">
                 <button type="button" id="analyzeBtn" class="btn btn-secondary">

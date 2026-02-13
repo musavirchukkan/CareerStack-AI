@@ -55,7 +55,15 @@ function scrapeLinkedIn(data) {
         // Company
         const companyEl = detailContainer.querySelector('.job-details-jobs-unified-top-card__company-name') ||
             detailContainer.querySelector('.jobs-unified-top-card__company-name');
-        if (companyEl) data.company = companyEl.innerText.trim();
+        if (companyEl) {
+            data.company = companyEl.innerText.trim();
+            // Get URL if it's a link or contains one
+            const link = companyEl.tagName === 'A' ? companyEl : companyEl.querySelector('a');
+            if (link) {
+                // Remove query params for cleaner URL
+                data.companyUrl = link.href.split('?')[0];
+            }
+        }
 
         // Salary (often distinct)
         const salaryEl = detailContainer.querySelector('.jobs-unified-top-card__salary-info');
@@ -126,13 +134,50 @@ function scrapeLinkedIn(data) {
 
     // Strategy 2: Single Job Page (Full View)
     else {
-        const titleEl = document.querySelector('h1.top-card-layout__title');
+        const titleEl = document.querySelector('h1.top-card-layout__title') ||
+            document.querySelector('.top-card-layoutH1') ||
+            document.querySelector('h1');
         if (titleEl) data.position = titleEl.innerText.trim();
 
-        const companyEl = document.querySelector('.top-card-layout__first-subline .topcard__org-name-link');
-        if (companyEl) data.company = companyEl.innerText.trim();
+        // Company
+        let companyEl = document.querySelector('.top-card-layout__first-subline .topcard__org-name-link');
 
-        const descEl = document.querySelector('.show-more-less-html__markup');
+        // Fallback for obfuscated layouts: Look for aria-label="Company, [Name]"
+        if (!companyEl) {
+            const companyAria = document.querySelector('[aria-label^="Company, "]');
+            if (companyAria) {
+                // If it's a link itself or contains a link
+                companyEl = companyAria.tagName === 'A' ? companyAria : companyAria.closest('a');
+                // If not link, just use the element for text
+                if (!companyEl) companyEl = companyAria;
+            }
+        }
+
+        // Fallback: Look for first link to a company page in top section
+        if (!companyEl) {
+            const topSection = document.querySelector('.top-card-layout') || document.body;
+            companyEl = topSection.querySelector('a[href*="/company/"]');
+        }
+
+        if (companyEl) {
+            // Clean text (remove "Company, " prefix if from aria-label)
+            let text = companyEl.innerText.trim();
+            if (!text && companyEl.getAttribute('aria-label')) {
+                text = companyEl.getAttribute('aria-label').replace('Company, ', '').replace('.', '');
+            }
+            data.company = text;
+
+            // Get URL if it's a link
+            if (companyEl.tagName === 'A') {
+                data.companyUrl = companyEl.href.split('?')[0];
+            } else {
+                const parentLink = companyEl.closest('a');
+                if (parentLink) data.companyUrl = parentLink.href.split('?')[0];
+            }
+        }
+
+        const descEl = document.querySelector('.show-more-less-html__markup') ||
+            document.querySelector('#job-details'); // Fallback for some layouts
         if (descEl) {
             const { text, blocks } = extractJobDescription(descEl);
             data.description = text;
