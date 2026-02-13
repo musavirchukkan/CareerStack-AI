@@ -113,6 +113,7 @@ async function saveToNotion(e) {
         company: document.getElementById('company').value,
         position: document.getElementById('position').value,
         platform: document.getElementById('platform').value,
+        status: document.getElementById('statusSelect').value,
         salary: document.getElementById('salary').value,
         link: document.getElementById('link').value,
         appLink: document.getElementById('appLink').value,

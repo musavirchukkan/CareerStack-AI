@@ -115,7 +115,7 @@ async function handleSaveToNotion(data) {
             properties: {
                 "Company": { title: [{ text: { content: data.company || 'Unknown Company' } }] },
                 "Position": { rich_text: [{ text: { content: data.position || 'Unknown Position' } }] },
-                "Status": { status: { name: "Not Applied" } }, // Ensure this matches user's schema
+                "Status": { status: { name: data.status || "Not Applied" } },
                 "Platform": { select: { name: data.platform || "Other" } },
                 "Salary": { rich_text: [{ text: { content: data.salary || '' } }] },
                 "Source URL": { url: data.link || null },
