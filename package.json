@@ -1,0 +1,17 @@
+{
+  "name": "careerstack-ai",
+  "version": "1.0.0",
+  "description": "AI-powered job application tracker for Notion.",
+  "scripts": {
+    "build": "zip -r extension.zip . -x '*.git*' '*.DS_Store*' 'node_modules/*' '.github/*' '*.md' 'LICENSE' 'Archive.zip' 'PENDING.md'",
+    "test": "echo \"Error: no test specified\" && exit 0"
+  },
+  "keywords": [
+    "chrome-extension",
+    "notion",
+    "ai",
+    "productivity"
+  ],
+  "author": "",
+  "license": "ISC"
+}

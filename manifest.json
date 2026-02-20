@@ -10,7 +10,8 @@
     "https://*.indeed.com/*"
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
   "action": {
     "default_popup": "popup.html",
@@ -29,7 +30,15 @@
   "content_scripts": [
     {
       "matches": ["https://*.linkedin.com/*", "https://*.indeed.com/*"],
-      "js": ["content.js"]
+      "js": [
+        "utils/dom-utils.js",
+        "scrapers/selectors/linkedin.js",
+        "scrapers/selectors/indeed.js",
+        "scrapers/BaseScraper.js",
+        "scrapers/LinkedInScraper.js",
+        "scrapers/IndeedScraper.js",
+        "content.js"
+      ]
     }
   ]
 }
