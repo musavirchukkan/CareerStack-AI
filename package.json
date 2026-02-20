@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "AI-powered job application tracker for Notion.",
   "scripts": {
-    "build": "zip -r extension.zip . -x '*.git*' '*.DS_Store*' 'node_modules/*' '.github/*' '*.md' 'LICENSE' 'Archive.zip' 'PENDING.md'",
+    "build": "rm -f extension.zip && zip -r extension.zip manifest.json background.js content.js popup.html popup.js options.html options.js styles.css icons/ utils/ scrapers/ services/",
     "test": "echo \"Error: no test specified\" && exit 0"
   },
   "keywords": [
