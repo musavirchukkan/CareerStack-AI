@@ -40,8 +40,18 @@ class LinkedInScraper extends BaseScraper {
         // Last Resort: LD-JSON script tags
         this._scrapeLDJson(data);
 
-        // Fallback cleanup
-        if (!data.position) data.position = document.title.split('|')[0].trim();
+        // Strategy 3: Extract from active job card in feed (collections/recommended pages)
+        if (!data.position || !data.company) {
+            this._scrapeFromJobCard(data);
+        }
+
+        // Final fallback: extract title from document.title
+        if (!data.position) {
+            const docTitle = document.title.split('|')[0].trim();
+            if (docTitle && !docTitle.match(/^\(\d+\)/) && !docTitle.includes('job picks')) {
+                data.position = docTitle.split(' - ')[0].trim();
+            }
+        }
 
         // Extract email from description if available
         if (data.description) {
@@ -52,16 +62,79 @@ class LinkedInScraper extends BaseScraper {
         return data;
     }
 
+    /**
+     * Strategy 3: Extract title/company from the selected job card in the feed.
+     * On /jobs/collections/ pages, the right panel may lack detectable containers,
+     * but the left-side job cards contain the info, keyed by currentJobId.
+     */
+    _scrapeFromJobCard(data) {
+        const urlObj = new URL(window.location.href);
+        const currentJobId = urlObj.searchParams.get('currentJobId');
+        if (!currentJobId) return;
+
+        // Find the job card link for the currently selected job
+        const cardLink = document.querySelector(`a[href*="currentJobId=${currentJobId}"]`);
+        if (!cardLink) return;
+
+        const card = cardLink.closest('[data-view-name="job-card"]') || cardLink;
+
+        // Title: extract from dismiss button aria-label ("Dismiss <Title> job")
+        if (!data.position) {
+            const dismissBtn = card.querySelector('button[data-view-name="dismiss-job"]');
+            if (dismissBtn) {
+                const aria = dismissBtn.getAttribute('aria-label') || '';
+                const match = aria.match(/^Dismiss\s+(.+?)\s+job$/i);
+                if (match) data.position = match[1].trim();
+            }
+        }
+
+        // Company: find <p> siblings of the bullet separator " • " in the card
+        if (!data.company) {
+            const allPs = card.querySelectorAll('p');
+            for (const p of allPs) {
+                if (p.innerText.trim() === '•') {
+                    // Bullet separator found — company is the first <p> in same parent
+                    const parent = p.parentElement;
+                    if (parent) {
+                        const firstP = parent.querySelector('p');
+                        if (firstP && firstP.innerText.trim() !== '•') {
+                            data.company = firstP.innerText.trim();
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
     _scrapeDetailContainer(data, detailContainer) {
         const S = LINKEDIN_SELECTORS.detail;
 
-        // Title
+        // Title — try selectors first, then document title parsing
         const titleEl = this._queryFirst(S.title, detailContainer);
         if (titleEl) data.position = titleEl.innerText.trim();
 
-        // Company
-        const companyEl = this._queryFirst(S.company, detailContainer);
-        if (companyEl) {
+        // Company — try direct selectors first
+        let companyEl = this._queryFirst(S.company, detailContainer);
+
+        // Fallback: aria-label="Company, Xyz." (LinkedIn 2026 SDUI)
+        if (!companyEl && S.companyAria) {
+            const ariaEl = detailContainer.querySelector(S.companyAria);
+            if (ariaEl) {
+                const ariaVal = ariaEl.getAttribute('aria-label') || '';
+                const match = ariaVal.match(/^Company,\s*(.+?)\.?$/);
+                if (match) data.company = match[1].trim();
+
+                // Get company URL from link within or nearby
+                const link = ariaEl.querySelector('a[href*="/company/"]') ||
+                             ariaEl.closest('a[href*="/company/"]');
+                if (link) data.companyUrl = link.href.split('?')[0];
+
+                companyEl = ariaEl; // mark as found
+            }
+        }
+
+        if (companyEl && !data.company) {
             data.company = companyEl.innerText.trim();
             const link = companyEl.tagName === 'A' ? companyEl : companyEl.querySelector('a');
             if (link) {

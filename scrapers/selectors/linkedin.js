@@ -9,13 +9,14 @@
 const LINKEDIN_SELECTORS = {
 
     // ─── Page Detection ──────────────────────────────────────────
-    // These detect which scraping strategy to use
+    // These detect which scraping strategy to use (detail container vs single page)
     container: [
         '.jobs-search__right-rail',
-        '.jobs-details__main-content'
+        '.jobs-details__main-content',
+        '[data-view-name="job-detail-page"]'
     ],
 
-    // ─── Strategy 1: Detail Container (Search / Collections Page) ───
+    // ─── Strategy 1: Detail Container (Search / Collections / Recommended) ───
     detail: {
         title: [
             '.job-details-jobs-unified-top-card__job-title',
@@ -24,13 +25,18 @@ const LINKEDIN_SELECTORS = {
         ],
         company: [
             '.job-details-jobs-unified-top-card__company-name',
-            '.jobs-unified-top-card__company-name'
+            '.jobs-unified-top-card__company-name',
+            '[aria-label^="Company, "] a'
         ],
+        // Fallback: extract company name from aria-label="Company, Xyz."
+        companyAria: '[aria-label^="Company, "]',
         salary: [
             '.jobs-unified-top-card__salary-info',
             '.job-details-jobs-unified-top-card__salary-info'
         ],
         description: [
+            '[data-sdui-component*="aboutTheJob"] [data-testid="expandable-text-box"]',
+            '[componentkey*="AboutTheJob"] [data-testid="expandable-text-box"]',
             '#job-details',
             '.jobs-description-content__text',
             '.jobs-description__content .jobs-box__html-content',
@@ -54,23 +60,25 @@ const LINKEDIN_SELECTORS = {
     single: {
         title: [
             'h1.top-card-layout__title',
-            '.top-card-layoutH1',
             '.jobs-unified-top-card__job-title',
-            '.job-details-jobs-unified-top-card__job-title',
-            'h1'
+            '.job-details-jobs-unified-top-card__job-title'
         ],
         company: [
             '.top-card-layout__first-subline .topcard__org-name-link',
             '.job-details-jobs-unified-top-card__company-name',
-            '.jobs-unified-top-card__company-name'
+            '.jobs-unified-top-card__company-name',
+            '[aria-label^="Company, "] a'
         ],
         companyAria: '[aria-label^="Company, "]',
         companyTopSection: [
             '.top-card-layout',
-            '.job-details-jobs-unified-top-card__container'
+            '.job-details-jobs-unified-top-card__container',
+            '[data-view-name="job-detail-page"]'
         ],
         companyLink: 'a[href*="/company/"]',
         description: [
+            '[data-sdui-component*="aboutTheJob"] [data-testid="expandable-text-box"]',
+            '[componentkey*="AboutTheJob"] [data-testid="expandable-text-box"]',
             '#job-details',
             '.jobs-description-content__text',
             '.jobs-description__content .jobs-box__html-content',

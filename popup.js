@@ -95,6 +95,16 @@ async function initializePopup() {
     // Bind buttons
     analyzeBtn.addEventListener('click', runAIAnalysis);
     form.addEventListener('submit', saveToNotion);
+    document.getElementById('clearCacheBtn').addEventListener('click', async () => {
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        const cacheKey = getCacheKey(tab.url);
+        await chrome.storage.session.remove(cacheKey);
+        showStatus('Cache cleared! Rescraping...', 'success');
+        // Reset form and rescrape
+        loadingDiv.classList.remove('hidden');
+        contentDiv.classList.add('hidden');
+        await scrapeAndCache(tab, cacheKey);
+    });
 }
 
 /**

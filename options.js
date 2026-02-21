@@ -1,5 +1,9 @@
 document.addEventListener('DOMContentLoaded', restoreOptions);
 document.getElementById('options-form').addEventListener('submit', saveOptions);
+document.getElementById('clearAllCacheBtn').addEventListener('click', async () => {
+    await chrome.storage.session.clear();
+    showStatus('All caches cleared!', 'success');
+});
 
 // Save options to chrome.storage
 function saveOptions(e) {
