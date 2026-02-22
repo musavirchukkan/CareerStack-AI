@@ -14,8 +14,11 @@ import { sanitizeText } from './utils/dom-utils';
  * Returns the appropriate scraper for the current URL, or null if unsupported.
  */
 function getScraperForUrl(url: string): BaseScraper | null {
-    if (url.includes('linkedin.com')) return new LinkedInScraper();
-    if (url.includes('indeed.com')) return new IndeedScraper();
+    const isLinkedInJob = url.includes('linkedin.com/jobs/') || url.includes('linkedin.com/jobs/view/');
+    const isIndeedJob = url.includes('indeed.com/viewjob') || url.includes('indeed.com/jobs');
+
+    if (isLinkedInJob) return new LinkedInScraper();
+    if (isIndeedJob) return new IndeedScraper();
     return null;
 }
 
