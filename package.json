@@ -1,6 +1,6 @@
 {
   "name": "careerstack-ai",
-  "version": "2.0.3",
+  "version": "2.0.1",
   "description": "AI-powered job application tracker for Notion.",
   "type": "module",
   "scripts": {
