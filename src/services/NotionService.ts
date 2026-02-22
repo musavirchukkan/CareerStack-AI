@@ -3,16 +3,18 @@
  * including page creation and block construction.
  */
 import type { NotionSaveData, NotionSaveResult, DescriptionBlock } from '../types';
+import { fetchWithRetry, getReadableError } from '../utils/retry';
 
 export class NotionService {
     /**
      * Saves job data to the user's Notion database.
+     * Retries on transient failures with exponential backoff.
      */
     static async save(data: NotionSaveData): Promise<NotionSaveResult> {
         try {
             const settings = await chrome.storage.sync.get(['notionSecret', 'databaseId']);
             if (!settings.notionSecret || !settings.databaseId) {
-                return { error: 'Missing Notion settings.' };
+                return { error: 'Missing Notion settings. Please configure in Options.' };
             }
 
             const today = new Date().toISOString().split('T')[0];
@@ -79,7 +81,7 @@ export class NotionService {
                 });
             }
 
-            const response = await fetch('https://api.notion.com/v1/pages', {
+            const response = await fetchWithRetry('https://api.notion.com/v1/pages', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${settings.notionSecret}`,
@@ -91,7 +93,7 @@ export class NotionService {
 
             const resData = await response.json();
             if (!response.ok) {
-                throw new Error(resData.message || 'Notion API Error');
+                return { error: getReadableError('Notion', response.status, resData.message) };
             }
 
             return { success: true };
