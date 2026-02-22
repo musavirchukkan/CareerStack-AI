@@ -1,6 +1,9 @@
 # Dependencies
 node_modules/
 
+# Build output
+dist/
+
 # Environment
 .env
 .env.local
@@ -12,6 +15,7 @@ Thumbs.db
 # Build artifacts
 extension.zip
 Archive.zip
+*.tsbuildinfo
 
 # Editor / IDE
 .vscode/
@@ -23,8 +27,3 @@ Archive.zip
 PRD.md
 PENDING.md
 implementation_plan.md.resolved
-
-# Package manager
-package-lock.json
-
-.DS_Store

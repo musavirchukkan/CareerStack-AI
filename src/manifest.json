@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "CareerStack AI",
-  "version": "1.0",
+  "version": "2.0.0",
   "description": "AI-powered job application tracker for Notion.",
   "permissions": ["activeTab", "scripting", "storage"],
   "host_permissions": [
@@ -10,18 +10,18 @@
     "https://*.indeed.com/*"
   ],
   "background": {
-    "service_worker": "background.js",
+    "service_worker": "background.ts",
     "type": "module"
   },
   "action": {
-    "default_popup": "popup.html",
+    "default_popup": "popup/popup.html",
     "default_icon": {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",
       "128": "icons/icon128.png"
     }
   },
-  "options_page": "options.html",
+  "options_page": "options/options.html",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
@@ -30,15 +30,7 @@
   "content_scripts": [
     {
       "matches": ["https://*.linkedin.com/*", "https://*.indeed.com/*"],
-      "js": [
-        "utils/dom-utils.js",
-        "scrapers/selectors/linkedin.js",
-        "scrapers/selectors/indeed.js",
-        "scrapers/BaseScraper.js",
-        "scrapers/LinkedInScraper.js",
-        "scrapers/IndeedScraper.js",
-        "content.js"
-      ]
+      "js": ["content.ts"]
     }
   ]
 }

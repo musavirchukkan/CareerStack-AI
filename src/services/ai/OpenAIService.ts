@@ -1,14 +1,13 @@
 /**
  * OpenAIService — Handles AI analysis via the OpenAI API.
  */
+import type { AIServiceResult } from '../../types';
+
 export class OpenAIService {
     /**
      * Calls the OpenAI Chat Completions API with the given prompt.
-     * @param {string} apiKey - The OpenAI API key.
-     * @param {string} prompt - The prompt to send.
-     * @returns {Promise<{ success?: boolean, data?: object, error?: string, raw?: object }>}
      */
-    async analyze(apiKey, prompt) {
+    async analyze(apiKey: string, prompt: string): Promise<AIServiceResult> {
         const url = 'https://api.openai.com/v1/chat/completions';
 
         const response = await fetch(url, {
@@ -30,9 +29,9 @@ export class OpenAIService {
         if (!response.ok) throw new Error(data.error?.message || 'OpenAI API Error');
 
         try {
-            const text = data.choices[0].message.content;
+            const text: string = data.choices[0].message.content;
             return { success: true, data: JSON.parse(text) };
-        } catch (e) {
+        } catch {
             return { error: 'Failed to parse OpenAI response', raw: data };
         }
     }

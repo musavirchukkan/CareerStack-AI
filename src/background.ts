@@ -4,10 +4,11 @@
  * Handles messages from the popup and delegates to the
  * appropriate service modules.
  */
-import { AIService } from './services/AIService.js';
-import { NotionService } from './services/NotionService.js';
+import { AIService } from './services/AIService';
+import { NotionService } from './services/NotionService';
+import type { ExtensionMessage } from './types';
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((request: ExtensionMessage, _sender, sendResponse) => {
     if (request.action === 'ANALYZE_JOB') {
         AIService.analyze(request.description).then(sendResponse);
         return true; // async response

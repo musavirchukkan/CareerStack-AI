@@ -1,18 +1,14 @@
 /**
  * DOM Utilities for CareerStack
  * Shared utilities for extracting and parsing job description DOM content.
- *
- * Loaded as a classic content script — exposes functions to the global scope.
  */
+import type { DescriptionBlock, DescriptionResult, RichTextSegment, TextAnnotations } from '../types';
 
 /**
  * Extracts email addresses from text using regex.
  * Filters out common false positives (image filenames, noreply, etc.)
- *
- * @param {string} text - Text to search for emails.
- * @returns {string|null} - The first real email found, or null.
  */
-function extractEmails(text) {
+export function extractEmails(text: string): string | null {
     if (!text) return null;
 
     // Match email patterns
@@ -51,20 +47,17 @@ function extractEmails(text) {
  * Extracts a job description element into:
  * 1. Plain text (for AI/Popup display)
  * 2. Structured blocks (for Notion: heading_2, bulleted_list_item, paragraph) with Rich Text
- *
- * @param {HTMLElement} element - The DOM element containing the job description.
- * @returns {{ text: string, blocks: Array<{ type: string, richText: Array }> }}
  */
-function extractJobDescription(element) {
+export function extractJobDescription(element: HTMLElement): DescriptionResult {
     if (!element) return { text: '', blocks: [] };
 
-    let blocks = [];
+    const blocks: DescriptionBlock[] = [];
 
     // WIP Block State
-    let currentBlockType = 'paragraph';
-    let currentRichText = [];
+    let currentBlockType: DescriptionBlock['type'] = 'paragraph';
+    let currentRichText: RichTextSegment[] = [];
 
-    const flushBlock = () => {
+    const flushBlock = (): void => {
         const cleanRichText = currentRichText.filter(s => s.text);
 
         if (cleanRichText.length > 0) {
@@ -80,9 +73,9 @@ function extractJobDescription(element) {
         currentRichText = [];
     };
 
-    function traverse(node, context = { bold: false, italic: false }) {
+    function traverse(node: Node, context: TextAnnotations = { bold: false, italic: false }): void {
         if (node.nodeType === Node.TEXT_NODE) {
-            let txt = node.textContent.replace(/[\n\t]+/g, ' ');
+            let txt = node.textContent?.replace(/[\n\t]+/g, ' ') ?? '';
 
             if (txt) {
                 currentRichText.push({
@@ -92,8 +85,9 @@ function extractJobDescription(element) {
             }
         }
         else if (node.nodeType === Node.ELEMENT_NODE) {
-            const tag = node.tagName;
-            const style = window.getComputedStyle(node);
+            const el = node as HTMLElement;
+            const tag = el.tagName;
+            const style = window.getComputedStyle(el);
 
             if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') return;
 
@@ -106,7 +100,7 @@ function extractJobDescription(element) {
             const isItalic = ['EM', 'I'].includes(tag) || style.fontStyle === 'italic';
             const isBr = tag === 'BR';
 
-            const newContext = {
+            const newContext: TextAnnotations = {
                 bold: context.bold || isBold,
                 italic: context.italic || isItalic
             };
@@ -114,14 +108,14 @@ function extractJobDescription(element) {
             if (isHeader) {
                 flushBlock();
                 currentBlockType = 'heading_2';
-                Array.from(node.childNodes).forEach(child => traverse(child, newContext));
+                Array.from(el.childNodes).forEach(child => traverse(child, newContext));
                 flushBlock();
                 return;
             }
 
             if (isList) {
                 flushBlock();
-                Array.from(node.children).forEach(child => traverse(child, newContext));
+                Array.from(el.children).forEach(child => traverse(child, newContext));
                 flushBlock();
                 return;
             }
@@ -129,7 +123,7 @@ function extractJobDescription(element) {
             if (isItem) {
                 flushBlock();
                 currentBlockType = 'bulleted_list_item';
-                Array.from(node.childNodes).forEach(child => traverse(child, newContext));
+                Array.from(el.childNodes).forEach(child => traverse(child, newContext));
                 flushBlock();
                 return;
             }
@@ -141,12 +135,12 @@ function extractJobDescription(element) {
 
             if (isBlock) {
                 flushBlock();
-                Array.from(node.childNodes).forEach(child => traverse(child, newContext));
+                Array.from(el.childNodes).forEach(child => traverse(child, newContext));
                 flushBlock();
                 return;
             }
 
-            Array.from(node.childNodes).forEach(child => traverse(child, newContext));
+            Array.from(el.childNodes).forEach(child => traverse(child, newContext));
         }
     }
 

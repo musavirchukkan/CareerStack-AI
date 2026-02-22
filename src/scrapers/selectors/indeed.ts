@@ -3,10 +3,10 @@
  *
  * When Indeed changes their DOM, update selectors HERE instead of in the scraper logic.
  * Each field has an array of selectors tried in order (first match wins).
- *
- * Loaded as a classic content script before IndeedScraper.js
  */
-const INDEED_SELECTORS = {
+import type { IndeedSelectors } from '../../types';
+
+export const INDEED_SELECTORS: IndeedSelectors = {
     title: [
         '.jobsearch-JobInfoHeader-title',
         'h1.jobsearch-JobInfoHeader-title',
@@ -35,4 +35,4 @@ const INDEED_SELECTORS = {
         '.jobsearch-IndeedApplyButton-contentWrapper a',
         'a[data-testid="indeedApplyButton"]'
     ]
-};
+} as const;
