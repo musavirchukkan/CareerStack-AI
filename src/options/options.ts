@@ -22,6 +22,32 @@ async function saveOptions(e: Event): Promise<void> {
     const autoFetch = (document.getElementById('autoFetch') as HTMLInputElement).checked;
     const masterResume = (document.getElementById('masterResume') as HTMLTextAreaElement).value;
 
+    const saveBtn = document.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+    if (saveBtn) { saveBtn.textContent = 'Verifying...'; saveBtn.disabled = true; }
+
+    // Test API Key
+    let testSuccess = false;
+    try {
+        if (aiProvider === 'gemini') {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${aiKeyStr}`;
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text: "Hello" }] }] })
+            });
+            testSuccess = res.ok;
+        } else {
+            const res = await fetch('https://api.openai.com/v1/models', {
+                headers: { 'Authorization': `Bearer ${aiKeyStr}` }
+            });
+            testSuccess = res.ok;
+        }
+    } catch {
+        testSuccess = false;
+    }
+
+    if (saveBtn) { saveBtn.textContent = 'Save Settings'; saveBtn.disabled = false; }
+
     const notionSecret = await encryptData(notionSecretStr);
     const aiKey = await encryptData(aiKeyStr);
 
@@ -37,7 +63,11 @@ async function saveOptions(e: Event): Promise<void> {
         () => {
             // Save large resume text to local storage
             chrome.storage.local.set({ masterResume }, () => {
-                showStatus('Settings saved successfully!', 'success');
+                if (testSuccess) {
+                    showStatus('Settings saved and API Key validated!', 'success');
+                } else {
+                    showStatus('Settings saved, but API Key test failed!', 'error');
+                }
             });
         }
     );

@@ -15,6 +15,7 @@ export interface JobData {
   descriptionBlocks?: DescriptionBlock[];
   appLink: string;
   email?: string;
+  warnings?: string[];
 }
 
 // ─── Description Parsing ────────────────────────────────────────
@@ -76,6 +77,7 @@ export interface NotionSaveData {
 export interface NotionSaveResult {
   success?: boolean;
   error?: string;
+  url?: string;
 }
 
 export interface DuplicateCheckResult {

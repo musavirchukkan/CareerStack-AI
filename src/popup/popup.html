@@ -80,7 +80,18 @@
 </head>
 
 <body>
-    <div id="loading">Loading job details...</div>
+    <div id="loading" class="container">
+        <div id="skeleton-container">
+            <div class="skeleton skeleton-label" style="width: 50%; margin: 0 auto 1.5rem auto; height: 1.5rem;"></div>
+            <div class="form-group"><div class="skeleton skeleton-label"></div><div class="skeleton"></div></div>
+            <div class="form-group"><div class="skeleton skeleton-label"></div><div class="skeleton"></div></div>
+            <div class="field-row">
+                <div class="form-group"><div class="skeleton skeleton-label"></div><div class="skeleton"></div></div>
+                <div class="form-group"><div class="skeleton skeleton-label"></div><div class="skeleton"></div></div>
+            </div>
+            <div class="form-group"><div class="skeleton skeleton-label" style="margin-top:2rem;"></div><div class="skeleton" style="height: 3rem;"></div></div>
+        </div>
+    </div>
 
     <div id="main-content" class="container hidden">
         <h1>CareerStack AI</h1>

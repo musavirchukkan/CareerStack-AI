@@ -36,14 +36,29 @@ function scrapeJobData(): JobData {
 
     const scraper = getScraperForUrl(url);
     if (scraper) {
-        const result = scraper.scrape(data);
-        result.company = sanitizeText(result.company);
-        result.position = sanitizeText(result.position);
-        result.salary = sanitizeText(result.salary);
-        result.description = sanitizeText(result.description);
-        result.appLink = sanitizeText(result.appLink);
-        if (result.companyUrl) result.companyUrl = sanitizeText(result.companyUrl);
-        return result;
+        try {
+            const result = scraper.scrape(data);
+            result.company = sanitizeText(result.company);
+            result.position = sanitizeText(result.position);
+            result.salary = sanitizeText(result.salary);
+            result.description = sanitizeText(result.description);
+            result.appLink = sanitizeText(result.appLink);
+            if (result.companyUrl) result.companyUrl = sanitizeText(result.companyUrl);
+            
+            const missing = [];
+            if (!result.company) missing.push('Company');
+            if (!result.position) missing.push('Position');
+            if (!result.description) missing.push('Description');
+            
+            if (missing.length > 0) {
+                result.warnings = [`Missing fields: ${missing.join(', ')}`];
+            }
+            return result;
+        } catch (error) {
+            console.error('Scraping error:', error);
+            data.warnings = ['A critical error occurred while scraping. Some fields may be missing.'];
+            return data;
+        }
     }
 
     return data;

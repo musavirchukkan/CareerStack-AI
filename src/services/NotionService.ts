@@ -149,7 +149,8 @@ export class NotionService {
                 return { error: getReadableError('Notion', response.status, resData.message) };
             }
 
-            return { success: true };
+            const pageUrl = resData.url || `https://notion.so/${resData.id.replace(/-/g, '')}`;
+            return { success: true, url: pageUrl };
 
         } catch (error) {
             console.error('Notion Error:', error);

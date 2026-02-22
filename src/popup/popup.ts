@@ -188,6 +188,10 @@ function populateForm(data: JobData): void {
     if (data.descriptionBlocks) {
         window.jobDescriptionBlocks = data.descriptionBlocks;
     }
+
+    if (data.warnings && data.warnings.length > 0) {
+        showStatusHTML(`⚠️ ${data.warnings.join('<br>')}`, 'error', 6000);
+    }
 }
 
 /**
@@ -201,6 +205,11 @@ function restoreAnalysis(analysis: AIAnalysisData): void {
 
 // ─── AI Analysis ────────────────────────────────────────────────
 async function runAIAnalysis(): Promise<void> {
+    if (!navigator.onLine) {
+        showStatus('You are offline. Check connection.', 'error');
+        return;
+    }
+
     if (isAnalyzing) return; // Prevent double-click
     isAnalyzing = true;
 
@@ -259,6 +268,12 @@ async function runAIAnalysis(): Promise<void> {
 // ─── Save to Notion ─────────────────────────────────────────────
 async function saveToNotion(e: Event): Promise<void> {
     e.preventDefault();
+
+    if (!navigator.onLine) {
+        showStatus('You are offline. Check connection.', 'error');
+        return;
+    }
+
     if (isSaving) return; // Prevent double-click
     isSaving = true;
 
@@ -325,9 +340,13 @@ async function saveToNotion(e: Event): Promise<void> {
             const cacheKey = getCacheKey(tab.url!);
             await chrome.storage.session.remove(cacheKey);
 
-            showStatus('Saved to Notion!', 'success');
+            if (response.url) {
+                showStatusHTML(`Saved! <a href="${response.url}" target="_blank" style="color:white;text-decoration:underline;margin-left:8px;">Open Notch Page</a>`, 'success', 8000);
+            } else {
+                showStatus('Saved to Notion!', 'success', 4000);
+            }
+            
             isSaving = false;
-            setTimeout(() => window.close(), 1500);
         } else {
             showStatus('Save failed: ' + (response?.error || 'Unknown error'), 'error');
             saveBtn.disabled = false;
@@ -343,13 +362,24 @@ async function saveToNotion(e: Event): Promise<void> {
 }
 
 // ─── UI Helpers ─────────────────────────────────────────────────
-function showStatus(msg: string, type: string): void {
+function showStatus(msg: string, type: string, timeout = 4000): void {
     statusDiv.textContent = msg;
     statusDiv.className = type;
     statusDiv.style.display = 'block';
     setTimeout(() => {
         statusDiv.style.display = 'none';
-    }, 4000);
+        statusDiv.textContent = '';
+    }, timeout);
+}
+
+function showStatusHTML(html: string, type: string, timeout = 4000): void {
+    statusDiv.innerHTML = html;
+    statusDiv.className = type;
+    statusDiv.style.display = 'block';
+    setTimeout(() => {
+        statusDiv.style.display = 'none';
+        statusDiv.innerHTML = '';
+    }, timeout);
 }
 
 function showError(msg: string): void {
