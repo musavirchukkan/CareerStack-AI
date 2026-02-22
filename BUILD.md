@@ -38,29 +38,33 @@ This project uses **TypeScript + Vite** for development and builds, with **GitHu
 
 ## Releasing a New Version
 
-### Using `npm version` (Recommended)
-This automatically bumps `package.json` + `src/manifest.json`, commits, and creates a git tag:
+This project uses **Semantic Release** with Conventional Commits to fully automate versioning, changelog generation, and ZIP packaging. 
 
-```bash
-# Bug fix (2.0.1 → 2.0.2)
-npm version patch -m "chore: Bump to %s"
+Do not manually edit the `version` field in `package.json` or `manifest.json`.
 
-# New feature (2.0.1 → 2.1.0)
-npm version minor -m "chore: Bump to %s"
+### 1. Conventional Commits
+Version numbers are calculated automatically based on commit message prefixes. When writing commit messages, use the following conventional prefixes:
 
-# Breaking change (2.0.1 → 3.0.0)
-npm version major -m "chore: Bump to %s"
+- `fix:` — Patches a bug (bumps **Patch** version, e.g., `2.0.1` → `2.0.2`)
+- `feat:` — Introduces a new feature (bumps **Minor** version, e.g., `2.0.1` → `2.1.0`)
+- `feat!:` or `fix!:` — Introduces a breaking change (bumps **Major** version, e.g., `2.0.1` → `3.0.0`)
 
-# Then push to trigger GitHub Actions release
-git push origin main --tags
-```
+*Note: Prefixes like `chore:`, `docs:`, `refactor:`, and `test:` will not trigger a new release.*
 
-### What Happens on Push
-The workflow is defined in `.github/workflows/build.yml`.
+### 2. CI/CD Release Pipeline
+The release process is fully automated via GitHub Actions (`semantic-release.yml` and `build.yml`). 
 
-- **Push to `main` or PR**: Install → TypeScript type check → Vite build → Upload artifact.
-- **Push a version tag** (`v*`): All of the above + Creates a **GitHub Release** with `extension.zip` attached and auto-generated release notes.
+The standard branching and release workflow is as follows:
+1. Contributors create feature branches and use conventional commits (`feat:`, `fix:`).
+2. Pull Requests are opened and merged into the `main` branch.
+3. Upon merge to `main`, the **Semantic Release** workflow runs:
+   - Analyzes commits since the last tag.
+   - Calculates the new semantic version.
+   - Updates `package.json` and syncs `src/manifest.json`.
+   - Generates and writes `CHANGELOG.md`.
+   - Commits changes, generates a git tag (e.g., `v2.1.0`), and pushes to `main`.
+4. The tag creation triggers the **Build Extension** workflow, which compiles the extension and publishes `extension.zip` to GitHub Releases.
 
-### Accessing Releases
-1. Go to the **Releases** section in the right sidebar of the GitHub repository.
-2. Download `extension.zip` from the relevant version.
+### 3. Accessing Built Artifacts
+1. Navigate to the **Releases** section in the right sidebar of the GitHub repository.
+2. Download `extension.zip` from the relevant version release.

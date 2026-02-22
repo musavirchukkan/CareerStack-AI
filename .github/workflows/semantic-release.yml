@@ -1,0 +1,41 @@
+name: Semantic Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    # Do not run if the commit was created by this bot (prevents infinite loop)
+    if: "!startsWith(github.event.head_commit.message, 'chore(release):')"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Run standard-version
+        # This analyzes commits, bumps version, generates changelog, syncs manifest, commits, and tags!
+        run: npx standard-version
+
+      - name: Push changed files and tags
+        run: |
+          # Pushing with workflow token so it triggers the 'Build Extension' workflow
+          git push --follow-tags origin main

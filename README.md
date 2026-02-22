@@ -69,6 +69,6 @@
 
 ## Troubleshooting
 
-- **"Detailed Job Description not found"**: Ensure you are on the full job details view, not just the list.
+- **Detailed Job Description not found**: Ensure you are on the full job details view, not just the list.
 - **AI Error**: Check your API Key and quota.
 - **Notion Error**: Ensure the database is shared with the integration and property names match exactly.
