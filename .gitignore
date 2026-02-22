@@ -24,8 +24,6 @@ Archive.zip
 *.swo
 
 # Internal docs (not shipped)
-PRD.md
-PENDING.md
 PRODUCTION_CHECKLIST.md
 CHROME_STORE_AUTO_PUBLISH.md
 ISSUES.md
