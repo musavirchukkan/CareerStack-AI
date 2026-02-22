@@ -2,19 +2,6 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-### [2.0.2](https://github.com/musavirchukkan/CareerStack-AI/compare/v2.1.0...v2.0.2) (2026-02-22)
-
-
-### Bug Fixes
-
-* sync manifest.json during semantic release and use PAT ([dfe1281](https://github.com/musavirchukkan/CareerStack-AI/commit/dfe128155c97e17a6fb1048409e4bb742cd830b0))
-
-## [2.1.0](https://github.com/musavirchukkan/CareerStack-AI/compare/v2.0.1...v2.1.0) (2026-02-22)
-
-
-### Features
-
-* Implement semantic release and conventional commits for automated versioning and releases. ([38aa218](https://github.com/musavirchukkan/CareerStack-AI/commit/38aa21873851922df44c40591093abe94f364c87))
 
 ## [2.0.1] - 2026-02-22
 
