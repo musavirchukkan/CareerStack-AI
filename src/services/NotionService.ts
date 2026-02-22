@@ -2,17 +2,69 @@
  * NotionService — Encapsulates all Notion API logic,
  * including page creation and block construction.
  */
-import type { NotionSaveData, NotionSaveResult, DescriptionBlock } from '../types';
+import type { NotionSaveData, NotionSaveResult, DuplicateCheckResult, DescriptionBlock } from '../types';
+import { fetchWithRetry, getReadableError } from '../utils/retry';
 
 export class NotionService {
     /**
+     * Checks if a job URL already exists in the Notion database.
+     * Queries the "Source URL" property.
+     */
+    static async checkDuplicate(jobUrl: string): Promise<DuplicateCheckResult> {
+        try {
+            const settings = await chrome.storage.sync.get(['notionSecret', 'databaseId']);
+            if (!settings.notionSecret || !settings.databaseId) {
+                return { isDuplicate: false };
+            }
+
+            const response = await fetchWithRetry(
+                `https://api.notion.com/v1/databases/${settings.databaseId}/query`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${settings.notionSecret}`,
+                        'Content-Type': 'application/json',
+                        'Notion-Version': '2022-06-28'
+                    },
+                    body: JSON.stringify({
+                        filter: {
+                            property: 'Source URL',
+                            url: { equals: jobUrl }
+                        },
+                        page_size: 1
+                    })
+                }
+            );
+
+            if (!response.ok) {
+                // Don't block saving if duplicate check fails
+                console.warn('Duplicate check failed:', response.status);
+                return { isDuplicate: false };
+            }
+
+            const data = await response.json();
+            if (data.results && data.results.length > 0) {
+                const existingPage = data.results[0];
+                const pageUrl = existingPage.url || `https://notion.so/${existingPage.id.replace(/-/g, '')}`;
+                return { isDuplicate: true, existingUrl: pageUrl };
+            }
+
+            return { isDuplicate: false };
+        } catch (error) {
+            console.warn('Duplicate check error:', error);
+            return { isDuplicate: false };
+        }
+    }
+
+    /**
      * Saves job data to the user's Notion database.
+     * Retries on transient failures with exponential backoff.
      */
     static async save(data: NotionSaveData): Promise<NotionSaveResult> {
         try {
             const settings = await chrome.storage.sync.get(['notionSecret', 'databaseId']);
             if (!settings.notionSecret || !settings.databaseId) {
-                return { error: 'Missing Notion settings.' };
+                return { error: 'Missing Notion settings. Please configure in Options.' };
             }
 
             const today = new Date().toISOString().split('T')[0];
@@ -79,7 +131,7 @@ export class NotionService {
                 });
             }
 
-            const response = await fetch('https://api.notion.com/v1/pages', {
+            const response = await fetchWithRetry('https://api.notion.com/v1/pages', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${settings.notionSecret}`,
@@ -91,7 +143,7 @@ export class NotionService {
 
             const resData = await response.json();
             if (!response.ok) {
-                throw new Error(resData.message || 'Notion API Error');
+                return { error: getReadableError('Notion', response.status, resData.message) };
             }
 
             return { success: true };

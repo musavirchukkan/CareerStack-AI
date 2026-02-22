@@ -2,28 +2,31 @@
  * GeminiService — Handles AI analysis via the Google Gemini API.
  */
 import type { AIServiceResult } from '../../types';
+import { fetchWithRetry, getReadableError } from '../../utils/retry';
 
 export class GeminiService {
     /**
      * Calls the Gemini API with the given prompt.
+     * Retries on transient failures with exponential backoff.
      */
     async analyze(apiKey: string, prompt: string): Promise<AIServiceResult> {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
 
-        const response = await fetch(url, {
+        const response = await fetchWithRetry(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 contents: [{ parts: [{ text: prompt }] }],
                 generationConfig: {
-                    // Forces the model to output a valid JSON object
                     response_mime_type: 'application/json'
                 }
             })
         });
 
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error?.message || 'Gemini API Error');
+        if (!response.ok) {
+            throw new Error(getReadableError('AI', response.status, data.error?.message));
+        }
 
         try {
             const text: string = data.candidates[0].content.parts[0].text;
