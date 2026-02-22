@@ -10,6 +10,10 @@ This project uses **Fully Automated Semantic Versioning**. You **never** need to
 
 Instead, our GitHub Actions bot reads your commit messages when they are merged into the `main` branch. Based on the formatting of your commits, the bot will automatically calculate the new version, generate the changelog, create a tag, and publish the release.
 
+> **⚠️ THE SQUASH TRAP (Important for PRs)**
+> If you are using "Squash and Merge" for Pull Requests, GitHub throws away all your individual branch commit messages and creates **one single commit** on main. 
+> Therefore, **the PR Title itself** must be formatted as a Conventional Commit (e.g. `feat: added dark mode`), otherwise the bot will see "Merge PR #4" and will safely ignore it, meaning **no release will happen.**
+
 ---
 
 ## 📝 Commit Message Conventions (Crucial)
