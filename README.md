@@ -2,10 +2,17 @@
 
 ## Installation
 
-1. Open Chrome and navigate to `chrome://extensions`.
-2. Enable **Developer Mode** (toggle in top right).
-3. Click **Load Unpacked**.
-4. Select the `/Users/musavir/Developer/CareerStack` folder.
+### From Release (Recommended)
+1. Download `extension.zip` from the latest [GitHub Release](https://github.com/musavirchukkan/CareerStack-AI/releases).
+2. Unzip the file.
+3. Open Chrome and navigate to `chrome://extensions`.
+4. Enable **Developer Mode** (toggle in top right).
+5. Click **Load Unpacked** and select the unzipped folder.
+
+### From Source
+1. Clone the repo and run `npm install && npm run build`.
+2. Open Chrome → `chrome://extensions` → Enable **Developer Mode**.
+3. Click **Load Unpacked** and select the `dist/` folder.
 
 ## Configuration
 
@@ -14,17 +21,28 @@
 3. **Notion Setup**:
    - create a Notion Integration at [https://www.notion.so/my-integrations](https://www.notion.so/my-integrations).
    - Copy the "Internal Integration Secret".
-   - Create a new Database in Notion with the following properties (Case Sensitive):
-     - **Company** (Title) -> Stores Company Name
-     - **Position** (Text)
-     - **Status** (Status) -> Default "Not Applied"
-     - **Platform** (Select) -> Options: LinkedIn, Indeed, Other
-     - **Salary** (Text)
-     - **Link** (URL)
-     - **App Link** (URL)
-     - **Email** (Email)
-     - **Score** (Number)
-     - **App Date** (Date)
+   - Create a new Database in Notion with the following properties (names are **Case Sensitive**):
+
+     **Auto-filled by extension:**
+      - **Company** (Title) -> Stores Company Name
+      - **Position** (Text)
+      - **Status** (Status) -> Default "Not Applied"
+      - **Platform** (Select) -> Options: LinkedIn, Indeed, Other
+      - **Application Date** (Date)
+      - **Email** (Email)
+      - **Source URL** (URL)
+      - **Apply Link** (URL)
+      - **Salary** (Text)
+      - **Match Score** (Number)
+
+     **Optional (managed manually):**
+      - **Hiring Manager** (Text)
+      - **Interview Date** (Date)
+      - **Interview Status** (Multi-select)
+      - **Keywords** (Multi-select)
+      - **Resume** (Files)
+      - **Cover Letter** (Files)
+      - **Place** (Text)
    - **Crucial**: Share the database with your integration (Click "..." > "Connect to" > Select your integration).
    - Copy the Database ID from the URL (it's the long string after `notion.so/` and before `?v=`).
 4. **AI Setup**:
