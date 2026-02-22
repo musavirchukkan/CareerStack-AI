@@ -8,7 +8,6 @@
     "build": "vite build",
     "typecheck": "tsc --noEmit",
     "zip": "npm run build && cd dist && zip -r ../extension.zip .",
-    "version": "node -e \"const m=require('./src/manifest.json');m.version=require('./package.json').version;require('fs').writeFileSync('./src/manifest.json',JSON.stringify(m,null,2)+'\\n')\" && git add src/manifest.json",
     "test": "echo \"Error: no test specified\" && exit 0"
   },
   "standard-version": {
