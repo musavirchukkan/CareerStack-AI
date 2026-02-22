@@ -99,7 +99,10 @@ async function initializePopup(): Promise<void> {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
     // Check if we are on a supported site
-    if (tab.url?.includes('linkedin.com') || tab.url?.includes('indeed.com')) {
+    const isLinkedIn = tab.url?.includes('linkedin.com/jobs/') || tab.url?.includes('linkedin.com/jobs/view/');
+    const isIndeed = tab.url?.includes('indeed.com/viewjob') || tab.url?.includes('indeed.com/jobs');
+
+    if (isLinkedIn || isIndeed) {
         const cacheKey = getCacheKey(tab.url!);
 
         // Check cache first
@@ -179,7 +182,13 @@ function populateForm(data: JobData): void {
     setVal('position', data.position || '');
     setVal('platform', data.platform || 'Other');
     if (data.salary) setVal('salary', data.salary);
-    if (data.email) setVal('email', data.email);
+    
+    const emailEl = document.getElementById('email') as HTMLInputElement;
+    if (data.email) {
+        if (emailEl) emailEl.value = data.email;
+    } else {
+        if (emailEl) emailEl.placeholder = 'No email found';
+    }
     setVal('link', data.url);
     if (data.appLink) setVal('appLink', data.appLink);
     if (data.companyUrl) setVal('companyUrl', data.companyUrl);
@@ -198,7 +207,13 @@ function populateForm(data: JobData): void {
  * Restores AI analysis results from cache into the form.
  */
 function restoreAnalysis(analysis: AIAnalysisData): void {
-    if (analysis.email) (document.getElementById('email') as HTMLInputElement).value = analysis.email;
+    const emailEl = document.getElementById('email') as HTMLInputElement;
+    if (analysis.email) {
+        if (emailEl) emailEl.value = analysis.email;
+    } else {
+        if (emailEl) emailEl.placeholder = 'No email found';
+    }
+    
     if (analysis.score != null) document.getElementById('scoreDisplay')!.textContent = analysis.score + '/100';
     if (analysis.summary) (document.getElementById('aiAnalysis') as HTMLTextAreaElement).value = analysis.summary;
 }
@@ -236,7 +251,12 @@ async function runAIAnalysis(): Promise<void> {
                 summary: response.data.summary || ''
             };
 
-            (document.getElementById('email') as HTMLInputElement).value = analysis.email || '';
+            const emailEl = document.getElementById('email') as HTMLInputElement;
+            if (analysis.email) {
+                if (emailEl) emailEl.value = analysis.email;
+            } else {
+                if (emailEl) emailEl.placeholder = 'No email found';
+            }
             document.getElementById('scoreDisplay')!.textContent = analysis.score + '/100';
             (document.getElementById('aiAnalysis') as HTMLTextAreaElement).value = analysis.summary;
             showStatus('Analysis complete!', 'success');

@@ -17,7 +17,10 @@
             <div class="card">
                 <h2>Notion Integration</h2>
                 <div class="form-group">
-                    <label for="notionSecret">Notion Integration Secret</label>
+                    <label for="notionSecret">
+                        Notion Integration Secret
+                        <span id="notionStatus" class="verification-badge hidden">✅ Verified</span>
+                    </label>
                     <input type="password" id="notionSecret" placeholder="secret_..." required>
                     <p class="helper-text">Create an integration at <a href="https://www.notion.so/my-integrations"
                             target="_blank">notion.so/my-integrations</a></p>
@@ -40,7 +43,10 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="aiKey">API Key</label>
+                    <label for="aiKey">
+                        API Key
+                        <span id="aiKeyStatus" class="verification-badge hidden">✅ Verified</span>
+                    </label>
                     <input type="password" id="aiKey" placeholder="Enter your API Key" required>
                     <p class="helper-text">Your key is stored locally and never sent to our servers.</p>
                 </div>

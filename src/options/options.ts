@@ -25,25 +25,59 @@ async function saveOptions(e: Event): Promise<void> {
     const saveBtn = document.querySelector('button[type="submit"]') as HTMLButtonElement | null;
     if (saveBtn) { saveBtn.textContent = 'Verifying...'; saveBtn.disabled = true; }
 
-    // Test API Key
-    let testSuccess = false;
-    try {
-        if (aiProvider === 'gemini') {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${aiKeyStr}`;
-            const res = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: "Hello" }] }] })
+    // Test API Keys
+    let aiSuccess = false;
+    let notionSuccess = false;
+    let notionErrorMsg = 'Notion test failed!';
+
+    // Use Promise.all to run both validations in parallel
+    const [aiResult, notionResult] = await Promise.allSettled([
+        // 1. Test AI Key
+        (async () => {
+            if (aiProvider === 'gemini') {
+                // Instead of generating content, just GET the model info for instant verification
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest?key=${aiKeyStr}`;
+                const res = await fetch(url, { method: 'GET' });
+                if (!res.ok) throw new Error('Gemini API validation failed');
+                return true;
+            } else {
+                const res = await fetch('https://api.openai.com/v1/models', {
+                    headers: { 'Authorization': `Bearer ${aiKeyStr}` }
+                });
+                if (!res.ok) throw new Error('OpenAI API validation failed');
+                return true;
+            }
+        })(),
+
+        // 2. Test Notion Credentials
+        (async () => {
+            const res = await fetch(`https://api.notion.com/v1/databases/${databaseId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${notionSecretStr}`,
+                    'Notion-Version': '2022-06-28'
+                }
             });
-            testSuccess = res.ok;
-        } else {
-            const res = await fetch('https://api.openai.com/v1/models', {
-                headers: { 'Authorization': `Bearer ${aiKeyStr}` }
-            });
-            testSuccess = res.ok;
-        }
-    } catch {
-        testSuccess = false;
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || res.statusText);
+            }
+            return true;
+        })()
+    ]);
+
+    // Evaluate Results
+    if (aiResult.status === 'fulfilled') {
+        aiSuccess = true;
+    } else {
+        console.error('AI validation failed:', aiResult.reason);
+    }
+
+    if (notionResult.status === 'fulfilled') {
+        notionSuccess = true;
+    } else {
+        console.error('Notion validation failed:', notionResult.reason);
+        notionErrorMsg = `Notion error: ${notionResult.reason.message}`;
     }
 
     if (saveBtn) { saveBtn.textContent = 'Save Settings'; saveBtn.disabled = false; }
@@ -51,39 +85,67 @@ async function saveOptions(e: Event): Promise<void> {
     const notionSecret = await encryptData(notionSecretStr);
     const aiKey = await encryptData(aiKeyStr);
 
-    // Save settings to sync
     chrome.storage.sync.set(
         {
             notionSecret,
             databaseId,
             aiProvider,
             aiKey,
-            autoFetch
+            autoFetch,
+            aiKeyVerified: aiSuccess,
+            notionVerified: notionSuccess
         },
         () => {
             // Save large resume text to local storage
             chrome.storage.local.set({ masterResume }, () => {
-                if (testSuccess) {
-                    showStatus('Settings saved and API Key validated!', 'success');
+                if (aiSuccess && notionSuccess) {
+                    document.getElementById('aiKeyStatus')?.classList.remove('hidden');
+                    document.getElementById('notionStatus')?.classList.remove('hidden');
+                    showStatus('Settings saved and APIs validated!', 'success');
                 } else {
-                    showStatus('Settings saved, but API Key test failed!', 'error');
+                    if (!aiSuccess) document.getElementById('aiKeyStatus')?.classList.add('hidden');
+                    if (!notionSuccess) document.getElementById('notionStatus')?.classList.add('hidden');
+                    
+                    if (!aiSuccess && !notionSuccess) {
+                        showStatus('Settings saved, but both API tests failed!', 'error');
+                    } else if (!notionSuccess) {
+                        showStatus(`Settings saved, but ${notionErrorMsg}`, 'error');
+                    } else {
+                        showStatus('Settings saved, but AI API test failed!', 'error');
+                    }
                 }
             });
         }
     );
 }
 
+function clearAiVerificationBadge(): void {
+    document.getElementById('aiKeyStatus')?.classList.add('hidden');
+}
+
+function clearNotionVerificationBadge(): void {
+    document.getElementById('notionStatus')?.classList.add('hidden');
+}
+
+// Clear badges if fields are typed in
+document.getElementById('aiKey')?.addEventListener('input', clearAiVerificationBadge);
+document.getElementById('aiProvider')?.addEventListener('change', clearAiVerificationBadge);
+
+document.getElementById('notionSecret')?.addEventListener('input', clearNotionVerificationBadge);
+document.getElementById('databaseId')?.addEventListener('input', clearNotionVerificationBadge);
+
 // Restores select box and checkbox state using the preferences
 // stored in chrome.storage.
 function restoreOptions(): void {
-    // Use default values
     chrome.storage.sync.get(
         {
             notionSecret: '',
             databaseId: '',
             aiProvider: 'gemini',
             aiKey: '',
-            autoFetch: true
+            autoFetch: true,
+            aiKeyVerified: false,
+            notionVerified: false
         },
         async (items) => {
             (document.getElementById('notionSecret') as HTMLInputElement).value = await decryptData(items.notionSecret);
@@ -91,6 +153,18 @@ function restoreOptions(): void {
             (document.getElementById('aiProvider') as HTMLSelectElement).value = items.aiProvider;
             (document.getElementById('aiKey') as HTMLInputElement).value = await decryptData(items.aiKey);
             (document.getElementById('autoFetch') as HTMLInputElement).checked = items.autoFetch;
+
+            if (items.aiKeyVerified) {
+                document.getElementById('aiKeyStatus')?.classList.remove('hidden');
+            } else {
+                document.getElementById('aiKeyStatus')?.classList.add('hidden');
+            }
+
+            if (items.notionVerified) {
+                document.getElementById('notionStatus')?.classList.remove('hidden');
+            } else {
+                document.getElementById('notionStatus')?.classList.add('hidden');
+            }
         }
     );
 
