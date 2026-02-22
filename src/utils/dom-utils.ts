@@ -5,6 +5,17 @@
 import type { DescriptionBlock, DescriptionResult, RichTextSegment, TextAnnotations } from '../types';
 
 /**
+ * Sanitizes plain text by removing trailing/leading whitespaces and stripping 
+ * any accidental HTML tags that might have been included.
+ */
+export function sanitizeText(text: string | null | undefined): string {
+    if (!text) return '';
+    // Strip HTML tags using a basic regex
+    const noTags = text.replace(/<[^>]*>?/gm, '');
+    return noTags.trim();
+}
+
+/**
  * Extracts email addresses from text using regex.
  * Filters out common false positives (image filenames, noreply, etc.)
  */

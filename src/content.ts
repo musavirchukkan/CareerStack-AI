@@ -8,6 +8,7 @@ import type { JobData } from './types';
 import { BaseScraper } from './scrapers/BaseScraper';
 import { LinkedInScraper } from './scrapers/LinkedInScraper';
 import { IndeedScraper } from './scrapers/IndeedScraper';
+import { sanitizeText } from './utils/dom-utils';
 
 /**
  * Returns the appropriate scraper for the current URL, or null if unsupported.
@@ -24,7 +25,7 @@ function getScraperForUrl(url: string): BaseScraper | null {
 function scrapeJobData(): JobData {
     const url = window.location.href;
     const data: JobData = {
-        url: url,
+        url: sanitizeText(url),
         platform: 'Other',
         company: '',
         position: '',
@@ -35,7 +36,14 @@ function scrapeJobData(): JobData {
 
     const scraper = getScraperForUrl(url);
     if (scraper) {
-        return scraper.scrape(data);
+        const result = scraper.scrape(data);
+        result.company = sanitizeText(result.company);
+        result.position = sanitizeText(result.position);
+        result.salary = sanitizeText(result.salary);
+        result.description = sanitizeText(result.description);
+        result.appLink = sanitizeText(result.appLink);
+        if (result.companyUrl) result.companyUrl = sanitizeText(result.companyUrl);
+        return result;
     }
 
     return data;

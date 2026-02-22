@@ -4,6 +4,7 @@
  */
 import type { NotionSaveData, NotionSaveResult, DuplicateCheckResult, DescriptionBlock } from '../types';
 import { fetchWithRetry, getReadableError } from '../utils/retry';
+import { decryptData } from '../utils/encryption';
 
 export class NotionService {
     /**
@@ -16,13 +17,14 @@ export class NotionService {
             if (!settings.notionSecret || !settings.databaseId) {
                 return { isDuplicate: false };
             }
+            const decryptedSecret = await decryptData(settings.notionSecret);
 
             const response = await fetchWithRetry(
                 `https://api.notion.com/v1/databases/${settings.databaseId}/query`,
                 {
                     method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${settings.notionSecret}`,
+                        'Authorization': `Bearer ${decryptedSecret}`,
                         'Content-Type': 'application/json',
                         'Notion-Version': '2022-06-28'
                     },
@@ -66,6 +68,7 @@ export class NotionService {
             if (!settings.notionSecret || !settings.databaseId) {
                 return { error: 'Missing Notion settings. Please configure in Options.' };
             }
+            const decryptedSecret = await decryptData(settings.notionSecret);
 
             const today = new Date().toISOString().split('T')[0];
 
@@ -134,7 +137,7 @@ export class NotionService {
             const response = await fetchWithRetry('https://api.notion.com/v1/pages', {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${settings.notionSecret}`,
+                    'Authorization': `Bearer ${decryptedSecret}`,
                     'Content-Type': 'application/json',
                     'Notion-Version': '2022-06-28'
                 },

@@ -1,6 +1,8 @@
 /**
  * Options Page Script — Settings management for CareerStack extension.
  */
+import { encryptData, decryptData } from '../utils/encryption';
+
 
 document.addEventListener('DOMContentLoaded', restoreOptions);
 document.getElementById('options-form')!.addEventListener('submit', saveOptions);
@@ -10,15 +12,18 @@ document.getElementById('clearAllCacheBtn')!.addEventListener('click', async () 
 });
 
 // Save options to chrome.storage
-function saveOptions(e: Event): void {
+async function saveOptions(e: Event): Promise<void> {
     e.preventDefault();
 
-    const notionSecret = (document.getElementById('notionSecret') as HTMLInputElement).value;
+    const notionSecretStr = (document.getElementById('notionSecret') as HTMLInputElement).value;
     const databaseId = (document.getElementById('databaseId') as HTMLInputElement).value;
     const aiProvider = (document.getElementById('aiProvider') as HTMLSelectElement).value;
-    const aiKey = (document.getElementById('aiKey') as HTMLInputElement).value;
+    const aiKeyStr = (document.getElementById('aiKey') as HTMLInputElement).value;
     const autoFetch = (document.getElementById('autoFetch') as HTMLInputElement).checked;
     const masterResume = (document.getElementById('masterResume') as HTMLTextAreaElement).value;
+
+    const notionSecret = await encryptData(notionSecretStr);
+    const aiKey = await encryptData(aiKeyStr);
 
     // Save settings to sync
     chrome.storage.sync.set(
@@ -50,11 +55,11 @@ function restoreOptions(): void {
             aiKey: '',
             autoFetch: true
         },
-        (items) => {
-            (document.getElementById('notionSecret') as HTMLInputElement).value = items.notionSecret;
+        async (items) => {
+            (document.getElementById('notionSecret') as HTMLInputElement).value = await decryptData(items.notionSecret);
             (document.getElementById('databaseId') as HTMLInputElement).value = items.databaseId;
             (document.getElementById('aiProvider') as HTMLSelectElement).value = items.aiProvider;
-            (document.getElementById('aiKey') as HTMLInputElement).value = items.aiKey;
+            (document.getElementById('aiKey') as HTMLInputElement).value = await decryptData(items.aiKey);
             (document.getElementById('autoFetch') as HTMLInputElement).checked = items.autoFetch;
         }
     );
