@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.2.0](https://github.com/musavirchukkan/CareerStack-AI/compare/v2.1.1...v2.2.0) (2026-02-22)
+
+
+### Features
+
+* **core:** implement production readiness checklist ([#4](https://github.com/musavirchukkan/CareerStack-AI/issues/4)) ([3352dad](https://github.com/musavirchukkan/CareerStack-AI/commit/3352dad194f8237beec9049b8eb6d1f051c75f8f))
+
 ### [2.1.1](https://github.com/musavirchukkan/CareerStack-AI/compare/v2.1.0...v2.1.1) (2026-02-22)
 
 ## [2.1.0](https://github.com/musavirchukkan/CareerStack-AI/compare/v2.0.1...v2.1.0) (2026-02-22)
