@@ -1,9 +1,13 @@
 # Changelog
 
-All notable changes to CareerStack AI will be documented in this file.
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [2.1.0](https://github.com/musavirchukkan/CareerStack-AI/compare/v2.0.1...v2.1.0) (2026-02-22)
+
+
+### Features
+
+* Implement semantic release and conventional commits for automated versioning and releases. ([38aa218](https://github.com/musavirchukkan/CareerStack-AI/commit/38aa21873851922df44c40591093abe94f364c87))
 
 ## [2.0.1] - 2026-02-22
 
