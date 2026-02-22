@@ -20,6 +20,11 @@ const loadingDiv = document.getElementById('loading') as HTMLDivElement;
 const contentDiv = document.getElementById('main-content') as HTMLDivElement;
 const statusDiv = document.getElementById('status') as HTMLDivElement;
 
+// Operation locks — prevent double-clicks and spam
+let isAnalyzing = false;
+let isSaving = false;
+const COOLDOWN_MS = 2000; // Minimum time between button re-enables
+
 // ─── Session Cache Helpers ──────────────────────────────────────
 // Cache TTL: 1 hour (results expire after this)
 const CACHE_TTL_MS = 60 * 60 * 1000;
@@ -196,9 +201,13 @@ function restoreAnalysis(analysis: AIAnalysisData): void {
 
 // ─── AI Analysis ────────────────────────────────────────────────
 async function runAIAnalysis(): Promise<void> {
+    if (isAnalyzing) return; // Prevent double-click
+    isAnalyzing = true;
+
     const description = (document.getElementById('fullDescription') as HTMLInputElement).value;
     if (!description) {
         showStatus('No job description found to analyze.', 'error');
+        isAnalyzing = false;
         return;
     }
 
@@ -239,13 +248,19 @@ async function runAIAnalysis(): Promise<void> {
         showStatus('AI Error: ' + (error as Error).message, 'error');
     } finally {
         analyzeBtn.textContent = '✨ Run AI Analysis';
-        analyzeBtn.disabled = false;
+        // Cooldown before re-enabling
+        setTimeout(() => {
+            analyzeBtn.disabled = false;
+            isAnalyzing = false;
+        }, COOLDOWN_MS);
     }
 }
 
 // ─── Save to Notion ─────────────────────────────────────────────
 async function saveToNotion(e: Event): Promise<void> {
     e.preventDefault();
+    if (isSaving) return; // Prevent double-click
+    isSaving = true;
 
     const getVal = (id: string): string => {
         return (document.getElementById(id) as HTMLInputElement)?.value || '';
@@ -270,6 +285,7 @@ async function saveToNotion(e: Event): Promise<void> {
             if (!proceed) {
                 saveBtn.disabled = false;
                 saveBtn.textContent = 'Save to Notion';
+                isSaving = false;
                 showStatus('Save cancelled — duplicate found.', 'error');
                 return;
             }
@@ -310,16 +326,19 @@ async function saveToNotion(e: Event): Promise<void> {
             await chrome.storage.session.remove(cacheKey);
 
             showStatus('Saved to Notion!', 'success');
+            isSaving = false;
             setTimeout(() => window.close(), 1500);
         } else {
             showStatus('Save failed: ' + (response?.error || 'Unknown error'), 'error');
             saveBtn.disabled = false;
             saveBtn.textContent = 'Save to Notion';
+            isSaving = false;
         }
     } catch (error) {
         showStatus('Save Error: ' + (error as Error).message, 'error');
         saveBtn.disabled = false;
         saveBtn.textContent = 'Save to Notion';
+        isSaving = false;
     }
 }
 
