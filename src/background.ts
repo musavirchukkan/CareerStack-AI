@@ -17,4 +17,8 @@ chrome.runtime.onMessage.addListener((request: ExtensionMessage, _sender, sendRe
         NotionService.save(request.data).then(sendResponse);
         return true; // async response
     }
+    if (request.action === 'CHECK_DUPLICATE') {
+        NotionService.checkDuplicate(request.url).then(sendResponse);
+        return true; // async response
+    }
 });

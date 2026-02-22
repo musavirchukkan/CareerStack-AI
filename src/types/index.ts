@@ -78,6 +78,12 @@ export interface NotionSaveResult {
   error?: string;
 }
 
+export interface DuplicateCheckResult {
+  isDuplicate: boolean;
+  existingUrl?: string;
+  error?: string;
+}
+
 // ─── Selector Types ─────────────────────────────────────────────
 
 export type SelectorList = readonly string[];
@@ -133,7 +139,12 @@ export interface SaveToNotionMessage {
   data: NotionSaveData;
 }
 
-export type ExtensionMessage = ScrapeJobMessage | AnalyzeJobMessage | SaveToNotionMessage;
+export interface CheckDuplicateMessage {
+  action: 'CHECK_DUPLICATE';
+  url: string;
+}
+
+export type ExtensionMessage = ScrapeJobMessage | AnalyzeJobMessage | SaveToNotionMessage | CheckDuplicateMessage;
 
 // ─── Settings ───────────────────────────────────────────────────
 

@@ -251,13 +251,41 @@ async function saveToNotion(e: Event): Promise<void> {
         return (document.getElementById(id) as HTMLInputElement)?.value || '';
     };
 
+    const jobUrl = getVal('link');
+
+    saveBtn.textContent = 'Checking...';
+    saveBtn.disabled = true;
+
+    // Check for duplicates first
+    try {
+        const dupCheck = await chrome.runtime.sendMessage({
+            action: 'CHECK_DUPLICATE',
+            url: jobUrl
+        });
+
+        if (dupCheck && dupCheck.isDuplicate) {
+            const proceed = confirm(
+                `⚠️ This job was already saved to Notion.\n\nDo you want to save it again?`
+            );
+            if (!proceed) {
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save to Notion';
+                showStatus('Save cancelled — duplicate found.', 'error');
+                return;
+            }
+        }
+    } catch {
+        // Don't block saving if duplicate check fails
+        console.warn('Duplicate check failed, proceeding with save');
+    }
+
     const formData = {
         company: getVal('company'),
         position: getVal('position'),
         platform: getVal('platform'),
         status: getVal('statusSelect'),
         salary: getVal('salary'),
-        link: getVal('link'),
+        link: jobUrl,
         appLink: getVal('appLink'),
         companyUrl: getVal('companyUrl'),
         email: getVal('email'),
@@ -268,7 +296,6 @@ async function saveToNotion(e: Event): Promise<void> {
     };
 
     saveBtn.textContent = 'Saving...';
-    saveBtn.disabled = true;
 
     try {
         const response = await chrome.runtime.sendMessage({
