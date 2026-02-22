@@ -1,9 +1,13 @@
 {
   "manifest_version": 3,
   "name": "CareerStack AI",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "AI-powered job application tracker for Notion.",
-  "permissions": ["activeTab", "scripting", "storage"],
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
   "host_permissions": [
     "https://api.notion.com/*",
     "https://*.linkedin.com/*",
@@ -29,8 +33,13 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://*.linkedin.com/*", "https://*.indeed.com/*"],
-      "js": ["content.ts"]
+      "matches": [
+        "https://*.linkedin.com/*",
+        "https://*.indeed.com/*"
+      ],
+      "js": [
+        "content.ts"
+      ]
     }
   ]
 }
