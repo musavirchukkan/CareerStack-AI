@@ -141,30 +141,48 @@ async function initializePopup(): Promise<void> {
  * Scrapes data from the content script and caches it.
  */
 async function scrapeAndCache(tab: chrome.tabs.Tab, cacheKey: string): Promise<void> {
+    if (!tab.id) {
+        showError('Invalid tab. Try refreshing.');
+        return;
+    }
+
     try {
-        const response = await chrome.tabs.sendMessage(tab.id!, { action: 'SCRAPE_JOB' }) as JobData | undefined;
-        if (response) {
-            populateForm(response);
-            await setCache(cacheKey, { scraped: response });
+        const response = await chrome.tabs.sendMessage(tab.id, { action: 'SCRAPE_JOB' })
+            .catch((err) => {
+                console.warn("Initial scrape failed (content script may not be loaded):", err.message);
+                return { error: err.message };
+            }) as JobData | { error: string } | undefined;
+
+        if (response && !('error' in response)) {
+            populateForm(response as JobData);
+            await setCache(cacheKey, { scraped: response as JobData });
         } else {
-            showError('Could not scrape page. Try refreshing.');
-            console.log("No response from content script");
+            // First attempt failed (no content script or actual error). Attempt to inject it.
+            try {
+                await chrome.scripting.executeScript({
+                    target: { tabId: tab.id },
+                    files: ['content.js']
+                });
+                const retryResponse = await chrome.tabs.sendMessage(tab.id, { action: 'SCRAPE_JOB' })
+                    .catch((err) => {
+                        console.error("Retry scrape failed:", err.message);
+                        return { error: err.message };
+                    }) as JobData | { error: string } | undefined;
+                    
+                if (retryResponse && !('error' in retryResponse)) {
+                    populateForm(retryResponse as JobData);
+                    await setCache(cacheKey, { scraped: retryResponse as JobData });
+                } else {
+                    const errMsg = retryResponse && 'error' in retryResponse ? retryResponse.error : 'Unknown error';
+                    showError(`Failed to scrape page: ${errMsg}. Try refreshing.`);
+                }
+            } catch (injectError) {
+                console.error("Script injection failed:", injectError);
+                showError('Extension cannot run on this page. Try refreshing.');
+            }
         }
     } catch (error) {
-        console.warn('Initial connection to content script failed. Attempting to inject...', (error as Error).message);
-        try {
-            await chrome.scripting.executeScript({
-                target: { tabId: tab.id! },
-                files: ['content.js']
-            });
-            const response = await chrome.tabs.sendMessage(tab.id!, { action: 'SCRAPE_JOB' }) as JobData | undefined;
-            if (response) {
-                populateForm(response);
-                await setCache(cacheKey, { scraped: response });
-            }
-        } catch {
-            showError('Please refresh the page and try again.');
-        }
+        showError('An unexpected error occurred. Try refreshing.');
     }
 }
 
@@ -242,6 +260,9 @@ async function runAIAnalysis(): Promise<void> {
         const response = await chrome.runtime.sendMessage({
             action: 'ANALYZE_JOB',
             description: description
+        }).catch((err) => {
+            console.error("Analysis request failed:", err.message);
+            return { error: err.message };
         });
 
         if (response && response.success) {
@@ -311,6 +332,9 @@ async function saveToNotion(e: Event): Promise<void> {
         const dupCheck = await chrome.runtime.sendMessage({
             action: 'CHECK_DUPLICATE',
             url: jobUrl
+        }).catch((err) => {
+            console.warn("Duplicate check failed:", err.message);
+            return { error: err.message };
         });
 
         if (dupCheck && dupCheck.isDuplicate) {
@@ -352,6 +376,9 @@ async function saveToNotion(e: Event): Promise<void> {
         const response = await chrome.runtime.sendMessage({
             action: 'SAVE_TO_NOTION',
             data: formData
+        }).catch((err) => {
+            console.error("Save request failed:", err.message);
+            return { error: err.message };
         });
 
         if (response && response.success) {
