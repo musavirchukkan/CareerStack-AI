@@ -11,9 +11,10 @@
     "test": "echo \"Error: no test specified\" && exit 0"
   },
   "standard-version": {
-    "scripts": {
-      "postbump": "node -e \"const m=require('./src/manifest.json');m.version=require('./package.json').version;require('fs').writeFileSync('./src/manifest.json',JSON.stringify(m,null,2)+'\\n')\" && git add src/manifest.json"
-    }
+    "bumpFiles": [
+      "package.json",
+      "src/manifest.json"
+    ]
   },
   "keywords": [
     "chrome-extension",
