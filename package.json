@@ -1,6 +1,6 @@
 {
   "name": "careerstack-ai",
-  "version": "2.1.0",
+  "version": "2.0.1",
   "description": "AI-powered job application tracker for Notion.",
   "type": "module",
   "scripts": {
@@ -10,6 +10,11 @@
     "zip": "npm run build && cd dist && zip -r ../extension.zip .",
     "version": "node -e \"const m=require('./src/manifest.json');m.version=require('./package.json').version;require('fs').writeFileSync('./src/manifest.json',JSON.stringify(m,null,2)+'\\n')\" && git add src/manifest.json",
     "test": "echo \"Error: no test specified\" && exit 0"
+  },
+  "standard-version": {
+    "scripts": {
+      "postbump": "node -e \"const m=require('./src/manifest.json');m.version=require('./package.json').version;require('fs').writeFileSync('./src/manifest.json',JSON.stringify(m,null,2)+'\\n')\" && git add src/manifest.json"
+    }
   },
   "keywords": [
     "chrome-extension",

@@ -17,6 +17,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # We use a Personal Access Token so the bot's tag push triggers the Build workflow
+          token: ${{ secrets.GH_BOT_TOKEN }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
