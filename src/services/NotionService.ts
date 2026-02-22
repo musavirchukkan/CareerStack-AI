@@ -2,13 +2,13 @@
  * NotionService — Encapsulates all Notion API logic,
  * including page creation and block construction.
  */
+import type { NotionSaveData, NotionSaveResult, DescriptionBlock } from '../types';
+
 export class NotionService {
     /**
      * Saves job data to the user's Notion database.
-     * @param {object} data - The job data from the popup form.
-     * @returns {Promise<{ success?: boolean, error?: string }>}
      */
-    static async save(data) {
+    static async save(data: NotionSaveData): Promise<NotionSaveResult> {
         try {
             const settings = await chrome.storage.sync.get(['notionSecret', 'databaseId']);
             if (!settings.notionSecret || !settings.databaseId) {
@@ -17,7 +17,7 @@ export class NotionService {
 
             const today = new Date().toISOString().split('T')[0];
 
-            const body = {
+            const body: Record<string, unknown> = {
                 parent: { database_id: settings.databaseId },
                 properties: {
                     'Company': {
@@ -35,7 +35,7 @@ export class NotionService {
                     'Source URL': { url: data.link || null },
                     'Apply Link': { url: data.appLink || null },
                     'Email': { email: data.email || null },
-                    'Match Score': { number: parseInt(data.score) || 0 },
+                    'Match Score': { number: parseInt(data.score || '0') || 0 },
                     'Application Date': { date: { start: today } }
                 },
                 children: [
@@ -49,24 +49,28 @@ export class NotionService {
                 ]
             };
 
+            const children = body.children as Record<string, unknown>[];
+
             // Add description blocks
             if (data.descriptionBlocks && data.descriptionBlocks.length > 0) {
-                const notionBlocks = data.descriptionBlocks.map(b => NotionService.createBlock(b)).filter(b => b);
-                body.children.push(...notionBlocks);
+                const notionBlocks = data.descriptionBlocks
+                    .map(b => NotionService.createBlock(b))
+                    .filter((b): b is Record<string, unknown> => b !== null);
+                children.push(...notionBlocks);
             } else {
-                body.children.push(...NotionService.chunkTextToBlocks(data.description));
+                children.push(...NotionService.chunkTextToBlocks(data.description));
             }
 
             // Add summary if available
             if (data.summary) {
-                body.children.push({
+                children.push({
                     object: 'block',
                     type: 'heading_2',
                     heading_2: {
                         rich_text: [{ text: { content: 'AI Summary' } }]
                     }
                 });
-                body.children.push({
+                children.push({
                     object: 'block',
                     type: 'paragraph',
                     paragraph: {
@@ -94,19 +98,17 @@ export class NotionService {
 
         } catch (error) {
             console.error('Notion Error:', error);
-            return { error: error.message };
+            return { error: (error as Error).message };
         }
     }
 
     /**
      * Converts a scraped block into a Notion API block object.
-     * @param {object} block
-     * @returns {object|null}
      */
-    static createBlock(block) {
+    static createBlock(block: DescriptionBlock): Record<string, unknown> | null {
         if (!block) return null;
 
-        let notionRichText = [];
+        let notionRichText: Record<string, unknown>[];
 
         if (block.richText && Array.isArray(block.richText)) {
             notionRichText = block.richText.map(segment => ({
@@ -152,16 +154,14 @@ export class NotionService {
 
     /**
      * Splits plain text into paragraph blocks that fit Notion's 2000 char limit.
-     * @param {string} text
-     * @returns {Array<object>}
      */
-    static chunkTextToBlocks(text) {
+    static chunkTextToBlocks(text: string): Record<string, unknown>[] {
         if (!text) return [];
-        const blocks = [];
+        const blocks: Record<string, unknown>[] = [];
         const chunkSize = 2000;
 
         for (let i = 0; i < text.length;) {
-            let limit = Math.min(i + chunkSize, text.length);
+            const limit = Math.min(i + chunkSize, text.length);
             let end = limit;
 
             if (end < text.length) {
@@ -176,7 +176,7 @@ export class NotionService {
                 }
             }
 
-            let chunk = text.substring(i, end);
+            const chunk = text.substring(i, end);
             blocks.push({
                 object: 'block',
                 type: 'paragraph',

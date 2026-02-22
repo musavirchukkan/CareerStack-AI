@@ -3,10 +3,10 @@
  *
  * When LinkedIn changes their DOM, update selectors HERE instead of in the scraper logic.
  * Each field has an array of selectors tried in order (first match wins).
- *
- * Loaded as a classic content script before LinkedInScraper.js
  */
-const LINKEDIN_SELECTORS = {
+import type { LinkedInSelectors } from '../../types';
+
+export const LINKEDIN_SELECTORS: LinkedInSelectors = {
 
     // ─── Page Detection ──────────────────────────────────────────
     // These detect which scraping strategy to use (detail container vs single page)
@@ -92,4 +92,4 @@ const LINKEDIN_SELECTORS = {
     // ─── Shared: Apply Link (works on all page types) ────────────
     directApply: 'a[aria-label^="Apply on company website"]',
     ldJson: 'script[type="application/ld+json"]'
-};
+} as const;

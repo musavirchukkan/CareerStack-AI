@@ -1,17 +1,28 @@
 {
   "name": "careerstack-ai",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "AI-powered job application tracker for Notion.",
+  "type": "module",
   "scripts": {
-    "build": "rm -f extension.zip && zip -r extension.zip manifest.json background.js content.js popup.html popup.js options.html options.js styles.css icons/ utils/ scrapers/ services/",
+    "dev": "vite build --watch --mode development",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "zip": "npm run build && cd dist && zip -r ../extension.zip .",
     "test": "echo \"Error: no test specified\" && exit 0"
   },
   "keywords": [
     "chrome-extension",
     "notion",
     "ai",
-    "productivity"
+    "productivity",
+    "typescript"
   ],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "@types/chrome": "^0.0.304",
+    "typescript": "^5.7.3",
+    "vite": "^6.2.0",
+    "vite-plugin-web-extension": "^4.4.3"
+  }
 }

@@ -1,21 +1,43 @@
+/**
+ * Popup Script — Main UI logic for the CareerStack extension popup.
+ */
+import type { JobData, AIAnalysisData, DescriptionBlock } from '../types';
+
+// Extend Window to store description blocks
+declare global {
+    interface Window {
+        jobDescriptionBlocks?: DescriptionBlock[];
+    }
+}
+
 document.addEventListener('DOMContentLoaded', initializePopup);
 
 // DOM Elements
-const form = document.getElementById('job-form');
-const analyzeBtn = document.getElementById('analyzeBtn');
-const saveBtn = document.getElementById('saveBtn');
-const loadingDiv = document.getElementById('loading');
-const contentDiv = document.getElementById('main-content');
-const statusDiv = document.getElementById('status');
+const form = document.getElementById('job-form') as HTMLFormElement;
+const analyzeBtn = document.getElementById('analyzeBtn') as HTMLButtonElement;
+const saveBtn = document.getElementById('saveBtn') as HTMLButtonElement;
+const loadingDiv = document.getElementById('loading') as HTMLDivElement;
+const contentDiv = document.getElementById('main-content') as HTMLDivElement;
+const statusDiv = document.getElementById('status') as HTMLDivElement;
 
 // ─── Session Cache Helpers ──────────────────────────────────────
 // Cache TTL: 1 hour (results expire after this)
 const CACHE_TTL_MS = 60 * 60 * 1000;
 
+interface CacheEntry {
+    scraped: JobData | null;
+    analysis?: AIAnalysisData;
+}
+
+interface CacheRecord {
+    data: CacheEntry;
+    timestamp: number;
+}
+
 /**
  * Generates a cache key from a URL (strips query params for consistency).
  */
-function getCacheKey(url) {
+function getCacheKey(url: string): string {
     try {
         const u = new URL(url);
         // For LinkedIn, keep currentJobId if present (it identifies the job)
@@ -34,12 +56,12 @@ function getCacheKey(url) {
 /**
  * Saves data to session storage with a timestamp.
  */
-async function setCache(key, data) {
+async function setCache(key: string, data: CacheEntry): Promise<void> {
     try {
-        const entry = { data, timestamp: Date.now() };
+        const entry: CacheRecord = { data, timestamp: Date.now() };
         await chrome.storage.session.set({ [key]: entry });
     } catch (e) {
-        console.warn('Cache write failed:', e.message);
+        console.warn('Cache write failed:', (e as Error).message);
     }
 }
 
@@ -47,10 +69,10 @@ async function setCache(key, data) {
  * Retrieves cached data if it exists and hasn't expired.
  * Returns null if cache miss or expired.
  */
-async function getCache(key) {
+async function getCache(key: string): Promise<CacheEntry | null> {
     try {
         const result = await chrome.storage.session.get(key);
-        const entry = result[key];
+        const entry = result[key] as CacheRecord | undefined;
         if (!entry) return null;
 
         // Check TTL
@@ -61,25 +83,25 @@ async function getCache(key) {
         }
         return entry.data;
     } catch (e) {
-        console.warn('Cache read failed:', e.message);
+        console.warn('Cache read failed:', (e as Error).message);
         return null;
     }
 }
 
 // ─── Main Initialization ────────────────────────────────────────
-async function initializePopup() {
+async function initializePopup(): Promise<void> {
     // Get current tab
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
     // Check if we are on a supported site
-    if (tab.url.includes('linkedin.com') || tab.url.includes('indeed.com')) {
-        const cacheKey = getCacheKey(tab.url);
+    if (tab.url?.includes('linkedin.com') || tab.url?.includes('indeed.com')) {
+        const cacheKey = getCacheKey(tab.url!);
 
         // Check cache first
         const cached = await getCache(cacheKey);
         if (cached) {
             // Restore from cache — instant popup
-            populateForm(cached.scraped);
+            if (cached.scraped) populateForm(cached.scraped);
             if (cached.analysis) {
                 restoreAnalysis(cached.analysis);
             }
@@ -95,9 +117,9 @@ async function initializePopup() {
     // Bind buttons
     analyzeBtn.addEventListener('click', runAIAnalysis);
     form.addEventListener('submit', saveToNotion);
-    document.getElementById('clearCacheBtn').addEventListener('click', async () => {
+    document.getElementById('clearCacheBtn')?.addEventListener('click', async () => {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        const cacheKey = getCacheKey(tab.url);
+        const cacheKey = getCacheKey(tab.url!);
         await chrome.storage.session.remove(cacheKey);
         showStatus('Cache cleared! Rescraping...', 'success');
         // Reset form and rescrape
@@ -110,9 +132,9 @@ async function initializePopup() {
 /**
  * Scrapes data from the content script and caches it.
  */
-async function scrapeAndCache(tab, cacheKey) {
+async function scrapeAndCache(tab: chrome.tabs.Tab, cacheKey: string): Promise<void> {
     try {
-        const response = await chrome.tabs.sendMessage(tab.id, { action: 'SCRAPE_JOB' });
+        const response = await chrome.tabs.sendMessage(tab.id!, { action: 'SCRAPE_JOB' }) as JobData | undefined;
         if (response) {
             populateForm(response);
             await setCache(cacheKey, { scraped: response });
@@ -121,50 +143,42 @@ async function scrapeAndCache(tab, cacheKey) {
             console.log("No response from content script");
         }
     } catch (error) {
-        console.warn('Initial connection to content script failed. Attempting to inject...', error.message);
+        console.warn('Initial connection to content script failed. Attempting to inject...', (error as Error).message);
         try {
             await chrome.scripting.executeScript({
-                target: { tabId: tab.id },
-                files: [
-                    'utils/dom-utils.js',
-                    'scrapers/selectors/linkedin.js',
-                    'scrapers/selectors/indeed.js',
-                    'scrapers/BaseScraper.js',
-                    'scrapers/LinkedInScraper.js',
-                    'scrapers/IndeedScraper.js',
-                    'content.js'
-                ]
+                target: { tabId: tab.id! },
+                files: ['content.js']
             });
-            const response = await chrome.tabs.sendMessage(tab.id, { action: 'SCRAPE_JOB' });
+            const response = await chrome.tabs.sendMessage(tab.id!, { action: 'SCRAPE_JOB' }) as JobData | undefined;
             if (response) {
                 populateForm(response);
                 await setCache(cacheKey, { scraped: response });
             }
-        } catch (e) {
+        } catch {
             showError('Please refresh the page and try again.');
         }
     }
 }
 
 // ─── Form Population ────────────────────────────────────────────
-function populateForm(data) {
+function populateForm(data: JobData): void {
     loadingDiv.classList.add('hidden');
     contentDiv.classList.remove('hidden');
 
-    if (document.getElementById('company')) document.getElementById('company').value = data.company || '';
-    if (document.getElementById('position')) document.getElementById('position').value = data.position || '';
-    if (document.getElementById('platform')) document.getElementById('platform').value = data.platform || 'Other';
+    const setVal = (id: string, value: string): void => {
+        const el = document.getElementById(id) as HTMLInputElement | null;
+        if (el) el.value = value;
+    };
 
-    if (data.salary) document.getElementById('salary').value = data.salary;
-
-    // Email (extracted from JD via regex during scraping)
-    if (data.email) document.getElementById('email').value = data.email;
-
-    document.getElementById('link').value = data.url;
-
-    if (data.appLink) document.getElementById('appLink').value = data.appLink;
-    if (data.companyUrl) document.getElementById('companyUrl').value = data.companyUrl;
-    if (data.description) document.getElementById('fullDescription').value = data.description;
+    setVal('company', data.company || '');
+    setVal('position', data.position || '');
+    setVal('platform', data.platform || 'Other');
+    if (data.salary) setVal('salary', data.salary);
+    if (data.email) setVal('email', data.email);
+    setVal('link', data.url);
+    if (data.appLink) setVal('appLink', data.appLink);
+    if (data.companyUrl) setVal('companyUrl', data.companyUrl);
+    if (data.description) setVal('fullDescription', data.description);
 
     if (data.descriptionBlocks) {
         window.jobDescriptionBlocks = data.descriptionBlocks;
@@ -174,15 +188,15 @@ function populateForm(data) {
 /**
  * Restores AI analysis results from cache into the form.
  */
-function restoreAnalysis(analysis) {
-    if (analysis.email) document.getElementById('email').value = analysis.email;
-    if (analysis.score != null) document.getElementById('scoreDisplay').textContent = analysis.score + '/100';
-    if (analysis.summary) document.getElementById('aiAnalysis').value = analysis.summary;
+function restoreAnalysis(analysis: AIAnalysisData): void {
+    if (analysis.email) (document.getElementById('email') as HTMLInputElement).value = analysis.email;
+    if (analysis.score != null) document.getElementById('scoreDisplay')!.textContent = analysis.score + '/100';
+    if (analysis.summary) (document.getElementById('aiAnalysis') as HTMLTextAreaElement).value = analysis.summary;
 }
 
 // ─── AI Analysis ────────────────────────────────────────────────
-async function runAIAnalysis() {
-    const description = document.getElementById('fullDescription').value;
+async function runAIAnalysis(): Promise<void> {
+    const description = (document.getElementById('fullDescription') as HTMLInputElement).value;
     if (!description) {
         showStatus('No job description found to analyze.', 'error');
         return;
@@ -198,20 +212,20 @@ async function runAIAnalysis() {
         });
 
         if (response && response.success) {
-            const analysis = {
+            const analysis: AIAnalysisData = {
                 email: response.data.email || '',
                 score: response.data.score,
                 summary: response.data.summary || ''
             };
 
-            document.getElementById('email').value = analysis.email;
-            document.getElementById('scoreDisplay').textContent = analysis.score + '/100';
-            document.getElementById('aiAnalysis').value = analysis.summary;
+            (document.getElementById('email') as HTMLInputElement).value = analysis.email || '';
+            document.getElementById('scoreDisplay')!.textContent = analysis.score + '/100';
+            (document.getElementById('aiAnalysis') as HTMLTextAreaElement).value = analysis.summary;
             showStatus('Analysis complete!', 'success');
 
             // Cache the analysis results alongside the scraped data
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-            const cacheKey = getCacheKey(tab.url);
+            const cacheKey = getCacheKey(tab.url!);
             const existing = await getCache(cacheKey);
             await setCache(cacheKey, {
                 scraped: existing ? existing.scraped : null,
@@ -219,10 +233,10 @@ async function runAIAnalysis() {
             });
 
         } else {
-            showStatus('AI Analysis failed: ' + (response.error || 'Unknown error'), 'error');
+            showStatus('AI Analysis failed: ' + (response?.error || 'Unknown error'), 'error');
         }
     } catch (error) {
-        showStatus('AI Error: ' + error.message, 'error');
+        showStatus('AI Error: ' + (error as Error).message, 'error');
     } finally {
         analyzeBtn.textContent = '✨ Run AI Analysis';
         analyzeBtn.disabled = false;
@@ -230,23 +244,27 @@ async function runAIAnalysis() {
 }
 
 // ─── Save to Notion ─────────────────────────────────────────────
-async function saveToNotion(e) {
+async function saveToNotion(e: Event): Promise<void> {
     e.preventDefault();
 
+    const getVal = (id: string): string => {
+        return (document.getElementById(id) as HTMLInputElement)?.value || '';
+    };
+
     const formData = {
-        company: document.getElementById('company').value,
-        position: document.getElementById('position').value,
-        platform: document.getElementById('platform').value,
-        status: document.getElementById('statusSelect').value,
-        salary: document.getElementById('salary').value,
-        link: document.getElementById('link').value,
-        appLink: document.getElementById('appLink').value,
-        companyUrl: document.getElementById('companyUrl').value,
-        email: document.getElementById('email').value,
-        score: document.getElementById('scoreDisplay').textContent.replace('/100', '').replace('--', '0'),
-        description: document.getElementById('fullDescription').value,
+        company: getVal('company'),
+        position: getVal('position'),
+        platform: getVal('platform'),
+        status: getVal('statusSelect'),
+        salary: getVal('salary'),
+        link: getVal('link'),
+        appLink: getVal('appLink'),
+        companyUrl: getVal('companyUrl'),
+        email: getVal('email'),
+        score: (document.getElementById('scoreDisplay')?.textContent || '').replace('/100', '').replace('--', '0'),
+        description: getVal('fullDescription'),
         descriptionBlocks: window.jobDescriptionBlocks || [],
-        summary: document.getElementById('aiAnalysis').value
+        summary: getVal('aiAnalysis')
     };
 
     saveBtn.textContent = 'Saving...';
@@ -261,25 +279,25 @@ async function saveToNotion(e) {
         if (response && response.success) {
             // Clear cache for this job after successful save
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-            const cacheKey = getCacheKey(tab.url);
+            const cacheKey = getCacheKey(tab.url!);
             await chrome.storage.session.remove(cacheKey);
 
             showStatus('Saved to Notion!', 'success');
             setTimeout(() => window.close(), 1500);
         } else {
-            showStatus('Save failed: ' + (response.error || 'Unknown error'), 'error');
+            showStatus('Save failed: ' + (response?.error || 'Unknown error'), 'error');
             saveBtn.disabled = false;
             saveBtn.textContent = 'Save to Notion';
         }
     } catch (error) {
-        showStatus('Save Error: ' + error.message, 'error');
+        showStatus('Save Error: ' + (error as Error).message, 'error');
         saveBtn.disabled = false;
         saveBtn.textContent = 'Save to Notion';
     }
 }
 
 // ─── UI Helpers ─────────────────────────────────────────────────
-function showStatus(msg, type) {
+function showStatus(msg: string, type: string): void {
     statusDiv.textContent = msg;
     statusDiv.className = type;
     statusDiv.style.display = 'block';
@@ -288,7 +306,7 @@ function showStatus(msg, type) {
     }, 4000);
 }
 
-function showError(msg) {
+function showError(msg: string): void {
     loadingDiv.textContent = msg;
     loadingDiv.style.color = 'var(--error-color)';
 }

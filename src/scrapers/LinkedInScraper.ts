@@ -1,16 +1,18 @@
 /**
  * LinkedInScraper — Handles job data extraction from LinkedIn job pages.
  * Supports both search/collections pages (right rail) and single job view pages.
- *
- * Depends on: BaseScraper, LINKEDIN_SELECTORS, extractJobDescription
- * Loaded as a classic content script.
  */
-class LinkedInScraper extends BaseScraper {
-    getPlatformName() {
+import type { JobData } from '../types';
+import { BaseScraper } from './BaseScraper';
+import { LINKEDIN_SELECTORS } from './selectors/linkedin';
+import { extractJobDescription, extractEmails } from '../utils/dom-utils';
+
+export class LinkedInScraper extends BaseScraper {
+    getPlatformName(): string {
         return 'LinkedIn';
     }
 
-    scrape(data) {
+    scrape(data: JobData): JobData {
         data.platform = this.getPlatformName();
         const S = LINKEDIN_SELECTORS;
 
@@ -67,7 +69,7 @@ class LinkedInScraper extends BaseScraper {
      * On /jobs/collections/ pages, the right panel may lack detectable containers,
      * but the left-side job cards contain the info, keyed by currentJobId.
      */
-    _scrapeFromJobCard(data) {
+    private _scrapeFromJobCard(data: JobData): void {
         const urlObj = new URL(window.location.href);
         const currentJobId = urlObj.searchParams.get('currentJobId');
         if (!currentJobId) return;
@@ -92,11 +94,11 @@ class LinkedInScraper extends BaseScraper {
         if (!data.company) {
             const allPs = card.querySelectorAll('p');
             for (const p of allPs) {
-                if (p.innerText.trim() === '•') {
+                if ((p as HTMLElement).innerText.trim() === '•') {
                     // Bullet separator found — company is the first <p> in same parent
                     const parent = p.parentElement;
                     if (parent) {
-                        const firstP = parent.querySelector('p');
+                        const firstP = parent.querySelector('p') as HTMLElement | null;
                         if (firstP && firstP.innerText.trim() !== '•') {
                             data.company = firstP.innerText.trim();
                         }
@@ -107,11 +109,11 @@ class LinkedInScraper extends BaseScraper {
         }
     }
 
-    _scrapeDetailContainer(data, detailContainer) {
+    private _scrapeDetailContainer(data: JobData, detailContainer: Element): void {
         const S = LINKEDIN_SELECTORS.detail;
 
         // Title — try selectors first, then document title parsing
-        const titleEl = this._queryFirst(S.title, detailContainer);
+        const titleEl = this._queryFirst(S.title, detailContainer) as HTMLElement | null;
         if (titleEl) data.position = titleEl.innerText.trim();
 
         // Company — try direct selectors first
@@ -128,27 +130,27 @@ class LinkedInScraper extends BaseScraper {
                 // Get company URL from link within or nearby
                 const link = ariaEl.querySelector('a[href*="/company/"]') ||
                              ariaEl.closest('a[href*="/company/"]');
-                if (link) data.companyUrl = link.href.split('?')[0];
+                if (link) data.companyUrl = (link as HTMLAnchorElement).href.split('?')[0];
 
                 companyEl = ariaEl; // mark as found
             }
         }
 
         if (companyEl && !data.company) {
-            data.company = companyEl.innerText.trim();
+            data.company = (companyEl as HTMLElement).innerText.trim();
             const link = companyEl.tagName === 'A' ? companyEl : companyEl.querySelector('a');
             if (link) {
-                data.companyUrl = link.href.split('?')[0];
+                data.companyUrl = (link as HTMLAnchorElement).href.split('?')[0];
             }
         }
 
         // Salary
-        const salaryEl = this._queryFirst(S.salary, detailContainer);
+        const salaryEl = this._queryFirst(S.salary, detailContainer) as HTMLElement | null;
         if (salaryEl) data.salary = salaryEl.innerText.trim();
 
         // Description — try within container first, then globally
-        let descEl = this._queryFirst(S.description, detailContainer);
-        if (!descEl) descEl = this._queryFirst(S.description);
+        let descEl = this._queryFirst(S.description, detailContainer) as HTMLElement | null;
+        if (!descEl) descEl = this._queryFirst(S.description) as HTMLElement | null;
         if (descEl) {
             const { text, blocks } = extractJobDescription(descEl);
             data.description = text;
@@ -160,7 +162,7 @@ class LinkedInScraper extends BaseScraper {
             const el = detailContainer.querySelector(selector);
             if (el) {
                 if (el.tagName === 'A') {
-                    data.appLink = el.href;
+                    data.appLink = (el as HTMLAnchorElement).href;
                     break;
                 }
                 const parentLink = el.closest('a');
@@ -177,11 +179,11 @@ class LinkedInScraper extends BaseScraper {
 
             const buttons = topCard.querySelectorAll('button, a');
             for (const btn of buttons) {
-                const text = btn.innerText || '';
+                const text = (btn as HTMLElement).innerText || '';
                 const aria = btn.getAttribute('aria-label') || '';
                 if (text.includes('Apply') || aria.includes('Apply')) {
                     if (btn.tagName === 'A') {
-                        data.appLink = btn.href;
+                        data.appLink = (btn as HTMLAnchorElement).href;
                         break;
                     }
                     const parentLink = btn.closest('a');
@@ -194,11 +196,11 @@ class LinkedInScraper extends BaseScraper {
         }
     }
 
-    _scrapeSingleJobPage(data) {
+    private _scrapeSingleJobPage(data: JobData): void {
         const S = LINKEDIN_SELECTORS.single;
 
         // Title
-        const titleEl = this._queryFirst(S.title);
+        const titleEl = this._queryFirst(S.title) as HTMLElement | null;
         if (titleEl) data.position = titleEl.innerText.trim();
 
         // Company — try direct selectors first
@@ -220,14 +222,14 @@ class LinkedInScraper extends BaseScraper {
         }
 
         if (companyEl) {
-            let text = companyEl.innerText.trim();
+            let text = (companyEl as HTMLElement).innerText.trim();
             if (!text && companyEl.getAttribute('aria-label')) {
-                text = companyEl.getAttribute('aria-label').replace('Company, ', '').replace('.', '');
+                text = (companyEl.getAttribute('aria-label') || '').replace('Company, ', '').replace('.', '');
             }
             data.company = text;
 
             if (companyEl.tagName === 'A') {
-                data.companyUrl = companyEl.href.split('?')[0];
+                data.companyUrl = (companyEl as HTMLAnchorElement).href.split('?')[0];
             } else {
                 const parentLink = companyEl.closest('a');
                 if (parentLink) data.companyUrl = parentLink.href.split('?')[0];
@@ -235,7 +237,7 @@ class LinkedInScraper extends BaseScraper {
         }
 
         // Description — try all selectors globally
-        const descEl = this._queryFirst(S.description);
+        const descEl = this._queryFirst(S.description) as HTMLElement | null;
         if (descEl) {
             const { text, blocks } = extractJobDescription(descEl);
             data.description = text;
@@ -243,8 +245,8 @@ class LinkedInScraper extends BaseScraper {
         }
     }
 
-    _scrapeDirectApplyLink(data) {
-        const applyBtn = document.querySelector(LINKEDIN_SELECTORS.directApply);
+    private _scrapeDirectApplyLink(data: JobData): void {
+        const applyBtn = document.querySelector(LINKEDIN_SELECTORS.directApply) as HTMLAnchorElement | null;
         if (applyBtn) {
             const url = new URL(applyBtn.href);
             if (url.hostname === 'www.linkedin.com' && url.pathname.includes('/redirect')) {
@@ -256,22 +258,22 @@ class LinkedInScraper extends BaseScraper {
         }
     }
 
-    _scrapeLDJson(data) {
+    private _scrapeLDJson(data: JobData): void {
         if (!data.appLink) {
             try {
                 const scripts = document.querySelectorAll(LINKEDIN_SELECTORS.ldJson);
                 for (const script of scripts) {
                     try {
-                        const json = JSON.parse(script.innerText);
+                        const json = JSON.parse((script as HTMLElement).innerText);
                         const job = Array.isArray(json)
-                            ? json.find(j => j['@type'] === 'JobPosting')
+                            ? json.find((j: Record<string, unknown>) => j['@type'] === 'JobPosting')
                             : (json['@type'] === 'JobPosting' ? json : null);
 
                         if (job) {
                             if (job.url) { data.appLink = job.url; break; }
                             if (job.applyUrl) { data.appLink = job.applyUrl; break; }
                         }
-                    } catch (e) { /* ignore parse errors */ }
+                    } catch { /* ignore parse errors */ }
                 }
             } catch (e) { console.log('Error parsing LD-JSON', e); }
         }
