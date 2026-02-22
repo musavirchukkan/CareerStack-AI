@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.2.1](https://github.com/musavirchukkan/CareerStack-AI/compare/v2.2.0...v2.2.1) (2026-02-22)
+
+
+### Bug Fixes
+
+* Refactor popup inter-process communication and error handling ([#5](https://github.com/musavirchukkan/CareerStack-AI/issues/5)) ([77314df](https://github.com/musavirchukkan/CareerStack-AI/commit/77314df20e70ac7d78d52065b7b035b8e8a069a5))
+
 ## [2.2.0](https://github.com/musavirchukkan/CareerStack-AI/compare/v2.1.1...v2.2.0) (2026-02-22)
 
 
