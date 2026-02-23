@@ -8,12 +8,18 @@
       "npmPublish": false
     }],
     ["@semantic-release/exec", {
-      "prepareCmd": "node -e \"const fs=require('fs'); const file='src/config/selectors.json'; const data=JSON.parse(fs.readFileSync(file)); data.version='${nextRelease.version}'; fs.writeFileSync(file, JSON.stringify(data, null, 4));\""
+      "prepareCmd": "node -e \"const fs=require('fs'); ['src/manifest.json','src/config/selectors.json'].forEach(f=>{const d=JSON.parse(fs.readFileSync(f));d.version='${nextRelease.version}';fs.writeFileSync(f,JSON.stringify(d,null,4));});\" && npm run zip"
     }],
     ["@semantic-release/git", {
       "assets": ["package.json", "package-lock.json", "src/manifest.json", "src/config/selectors.json", "CHANGELOG.md"],
-      "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+      "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}",
+      "authorName": "github-actions[bot]",
+      "authorEmail": "41898282+github-actions[bot]@users.noreply.github.com"
     }],
-    "@semantic-release/github"
+    ["@semantic-release/github", {
+      "assets": [
+        { "path": "extension.zip", "label": "CareerStack Extension v${nextRelease.version}" }
+      ]
+    }]
   ]
 }
