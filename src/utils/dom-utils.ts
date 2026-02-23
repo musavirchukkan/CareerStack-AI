@@ -23,7 +23,7 @@ export function extractEmails(text: string): string | null {
     if (!text) return null;
 
     // Match email patterns
-    const emailRegex = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
+    const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
     const matches = text.match(emailRegex);
     if (!matches) return null;
 
@@ -86,7 +86,7 @@ export function extractJobDescription(element: HTMLElement): DescriptionResult {
 
     function traverse(node: Node, context: TextAnnotations = { bold: false, italic: false }): void {
         if (node.nodeType === Node.TEXT_NODE) {
-            let txt = node.textContent?.replace(/[\n\t]+/g, ' ') ?? '';
+            const txt = node.textContent?.replace(/[\n\t]+/g, ' ') ?? '';
 
             if (txt) {
                 currentRichText.push({

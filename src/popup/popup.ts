@@ -184,7 +184,7 @@ async function scrapeAndCache(tab: chrome.tabs.Tab, cacheKey: string): Promise<v
                 showUnsupported();
             }
         }
-    } catch (error) {
+    } catch {
         showError('An unexpected error occurred. Try refreshing.');
     }
 }
@@ -391,7 +391,7 @@ async function saveToNotion(e: Event): Promise<void> {
             await chrome.storage.session.remove(cacheKey);
 
             if (response.url) {
-                showStatusHTML(`Saved! <a href="${response.url}" target="_blank" style="color:white;text-decoration:underline;margin-left:8px;">Open Notch Page</a>`, 'success', 8000);
+                showStatusHTML(`Saved! <a href="${response.url}" target="_blank" style="color:white;text-decoration:underline;margin-left:8px;">Open Notion Page</a>`, 'success', 8000);
             } else {
                 showStatus('Saved to Notion!', 'success', 4000);
             }

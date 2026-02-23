@@ -6,6 +6,7 @@ describe('NotionService', () => {
     describe('chunkTextToBlocks', () => {
         it('should chunk large text into multiple paragraph blocks', () => {
             const text = 'A'.repeat(5000);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const blocks = NotionService.chunkTextToBlocks(text) as any[];
 
             expect(blocks.length).toBe(3);
@@ -17,6 +18,7 @@ describe('NotionService', () => {
 
         it('should handle small strings normally', () => {
             const str = 'Small string';
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const blocks = NotionService.chunkTextToBlocks(str) as any[];
             expect(blocks.length).toBe(1);
             expect(blocks[0].paragraph.rich_text[0].text.content).toBe(str);
@@ -30,6 +32,7 @@ describe('NotionService', () => {
                 richText: [{ text: 'Section Title', annotations: { bold: false, italic: false } }]
             };
 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const notionBlock = NotionService.createBlock(block) as any;
             expect(notionBlock.type).toBe('heading_3'); // Maps heading_2 to heading_3 internally
             expect(notionBlock.heading_3.rich_text[0].text.content).toBe('Section Title');
@@ -41,6 +44,7 @@ describe('NotionService', () => {
                 richText: [{ text: 'Bold Text', annotations: { bold: true, italic: false } }]
             };
 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const notionBlock = NotionService.createBlock(block) as any;
             expect(notionBlock.type).toBe('paragraph');
             expect(notionBlock.paragraph.rich_text[0].annotations.bold).toBe(true);

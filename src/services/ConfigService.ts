@@ -1,4 +1,4 @@
-import type { RemoteConfig, SelectorConfig } from '../types';
+import type { RemoteConfig } from '../types';
 import { CONFIG } from '../config/constants';
 import fallbackConfigData from '../config/selectors.json';
 
