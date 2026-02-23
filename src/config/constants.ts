@@ -10,10 +10,11 @@ export const CONFIG = {
     AI: {
         GEMINI: {
             ENDPOINT: 'https://generativelanguage.googleapis.com/v1beta/models',
-            DEFAULT_MODEL: 'gemini-1.5-flash-latest'
+            DEFAULT_MODEL: 'gemini-flash-latest'
         },
         OPENAI: {
             ENDPOINT: 'https://api.openai.com/v1/chat/completions',
+            VERIFY_ENDPOINT: 'https://api.openai.com/v1/models',
             DEFAULT_MODEL: 'gpt-4o-mini'
         }
     },

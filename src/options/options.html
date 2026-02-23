@@ -19,11 +19,19 @@
                 <div class="form-group">
                     <label for="notionSecret">
                         Notion Integration Secret
-                        <span id="notionStatus" class="verification-badge hidden">✅ Verified</span>
+                        <span style="display: inline-flex; gap: 0.5rem; margin-left: auto;">
+                            <span id="notionStatus" class="verification-badge hidden">✅ Verified</span>
+                            <span id="schemaStatus" class="verification-badge hidden">✅ Schema Matched</span>
+                        </span>
                     </label>
                     <input type="password" id="notionSecret" placeholder="secret_..." required>
                     <p class="helper-text">Create an integration at <a href="https://www.notion.so/my-integrations"
                             target="_blank">notion.so/my-integrations</a></p>
+                </div>
+                <!-- Schema Error Box -->
+                <div id="schemaErrorBox" class="hidden" style="background-color: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem; font-size: 0.875rem;">
+                    <strong>Schema Validation Failed:</strong>
+                    <ul id="schemaErrorList" style="margin-top: 0.5rem; margin-bottom: 0; padding-left: 1.5rem;"></ul>
                 </div>
                 <div class="form-group">
                     <label for="databaseId">Database ID</label>

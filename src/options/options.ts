@@ -2,6 +2,8 @@
  * Options Page Script — Settings management for CareerStack extension.
  */
 import { encryptData, decryptData } from '../utils/encryption';
+import { NotionService } from '../services/NotionService';
+import { AIService } from '../services/AIService';
 
 
 document.addEventListener('DOMContentLoaded', restoreOptions);
@@ -34,37 +36,27 @@ async function saveOptions(e: Event): Promise<void> {
     const [aiResult, notionResult] = await Promise.allSettled([
         // 1. Test AI Key
         (async () => {
-            if (aiProvider === 'gemini') {
-                // Instead of generating content, just GET the model info for instant verification
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest?key=${aiKeyStr}`;
-                const res = await fetch(url, { method: 'GET' });
-                if (!res.ok) throw new Error('Gemini API validation failed');
-                return true;
-            } else {
-                const res = await fetch('https://api.openai.com/v1/models', {
-                    headers: { 'Authorization': `Bearer ${aiKeyStr}` }
-                });
-                if (!res.ok) throw new Error('OpenAI API validation failed');
-                return true;
-            }
+            const isValid = await AIService.verifyKey(aiProvider as 'gemini' | 'openai', aiKeyStr);
+            if (!isValid) throw new Error(`${aiProvider} API validation failed`);
+            return true;
         })(),
 
-        // 2. Test Notion Credentials
+        // 2. Test Notion Credentials & Schema
         (async () => {
-            const res = await fetch(`https://api.notion.com/v1/databases/${databaseId}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${notionSecretStr}`,
-                    'Notion-Version': '2022-06-28'
-                }
-            });
-            if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.message || res.statusText);
+            const schemaResult = await NotionService.validateSchema(databaseId, notionSecretStr);
+            if (!schemaResult.isConnectionValid) {
+                throw new Error(schemaResult.errors[0] || 'Database connection failed');
             }
-            return true;
+            if (!schemaResult.isValid) {
+                return { success: true, schemaValid: false, errors: schemaResult.errors };
+            }
+            
+            return { success: true, schemaValid: true };
         })()
     ]);
+
+    let notionSchemaValid = false;
+    let schemaErrors: string[] = [];
 
     // Evaluate Results
     if (aiResult.status === 'fulfilled') {
@@ -75,6 +67,10 @@ async function saveOptions(e: Event): Promise<void> {
 
     if (notionResult.status === 'fulfilled') {
         notionSuccess = true;
+        if (typeof notionResult.value === 'object' && notionResult.value !== null) {
+            notionSchemaValid = notionResult.value.schemaValid;
+            schemaErrors = notionResult.value.errors || [];
+        }
     } else {
         console.error('Notion validation failed:', notionResult.reason);
         notionErrorMsg = `Notion error: ${notionResult.reason.message}`;
@@ -93,18 +89,44 @@ async function saveOptions(e: Event): Promise<void> {
             aiKey,
             autoFetch,
             aiKeyVerified: aiSuccess,
-            notionVerified: notionSuccess
+            notionVerified: notionSuccess,
+            schemaVerified: notionSchemaValid
         },
         () => {
             // Save large resume text to local storage
             chrome.storage.local.set({ masterResume }, () => {
+                const schemaErrorBox = document.getElementById('schemaErrorBox');
+                const schemaErrorList = document.getElementById('schemaErrorList');
+                
+                if (schemaErrorBox && schemaErrorList) {
+                    if (!notionSchemaValid && notionSuccess) {
+                        schemaErrorList.innerHTML = schemaErrors.map(e => `<li>${e}</li>`).join('');
+                        schemaErrorBox.classList.remove('hidden');
+                    } else {
+                        schemaErrorBox.classList.add('hidden');
+                        schemaErrorList.innerHTML = '';
+                    }
+                }
+
                 if (aiSuccess && notionSuccess) {
                     document.getElementById('aiKeyStatus')?.classList.remove('hidden');
                     document.getElementById('notionStatus')?.classList.remove('hidden');
-                    showStatus('Settings saved and APIs validated!', 'success');
+                    
+                    if (notionSchemaValid) {
+                        document.getElementById('schemaStatus')?.classList.remove('hidden');
+                    } else {
+                        document.getElementById('schemaStatus')?.classList.add('hidden');
+                    }
+                    
+                    if (notionSchemaValid) {
+                        showStatus('Settings saved and DB schema verified!', 'success');
+                    } else {
+                        showStatus('Settings saved but DB schema is invalid!', 'error');
+                    }
                 } else {
                     if (!aiSuccess) document.getElementById('aiKeyStatus')?.classList.add('hidden');
                     if (!notionSuccess) document.getElementById('notionStatus')?.classList.add('hidden');
+                    document.getElementById('schemaStatus')?.classList.add('hidden');
                     
                     if (!aiSuccess && !notionSuccess) {
                         showStatus('Settings saved, but both API tests failed!', 'error');
@@ -125,6 +147,8 @@ function clearAiVerificationBadge(): void {
 
 function clearNotionVerificationBadge(): void {
     document.getElementById('notionStatus')?.classList.add('hidden');
+    document.getElementById('schemaStatus')?.classList.add('hidden');
+    document.getElementById('schemaErrorBox')?.classList.add('hidden');
 }
 
 // Clear badges if fields are typed in
@@ -145,7 +169,8 @@ function restoreOptions(): void {
             aiKey: '',
             autoFetch: true,
             aiKeyVerified: false,
-            notionVerified: false
+            notionVerified: false,
+            schemaVerified: false
         },
         async (items) => {
             (document.getElementById('notionSecret') as HTMLInputElement).value = await decryptData(items.notionSecret);
@@ -164,6 +189,12 @@ function restoreOptions(): void {
                 document.getElementById('notionStatus')?.classList.remove('hidden');
             } else {
                 document.getElementById('notionStatus')?.classList.add('hidden');
+            }
+            
+            if (items.schemaVerified) {
+                document.getElementById('schemaStatus')?.classList.remove('hidden');
+            } else {
+                document.getElementById('schemaStatus')?.classList.add('hidden');
             }
         }
     );

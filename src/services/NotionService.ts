@@ -2,7 +2,7 @@
  * NotionService — Encapsulates all Notion API logic,
  * including page creation and block construction.
  */
-import type { NotionSaveData, NotionSaveResult, DuplicateCheckResult, DescriptionBlock } from '../types';
+import type { NotionSaveData, NotionSaveResult, DuplicateCheckResult, DescriptionBlock, NotionSchemaValidationResult } from '../types';
 import { fetchWithRetry, getReadableError } from '../utils/retry';
 import { decryptData } from '../utils/encryption';
 import { CONFIG } from '../config/constants';
@@ -56,6 +56,74 @@ export class NotionService {
         } catch (error) {
             console.warn('Duplicate check error:', error);
             return { isDuplicate: false };
+        }
+    }
+
+    /**
+     * Validates that the target Notion Database contains all required
+     * properties with the correct types.
+     */
+    static async validateSchema(databaseId: string, secret: string): Promise<NotionSchemaValidationResult> {
+        try {
+            const response = await fetchWithRetry(
+                `${CONFIG.NOTION.BASE_URL}/databases/${databaseId}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${secret}`,
+                        'Notion-Version': CONFIG.NOTION.API_VERSION
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                const resData = await response.json();
+                return { 
+                    isConnectionValid: false,
+                    isValid: false, 
+                    errors: [`Failed to query database: ${resData.message || response.statusText}`] 
+                };
+            }
+
+            const data = await response.json();
+            const properties = data.properties || {};
+
+            const expectedSchema: Record<string, string> = {
+                'Company': 'title',
+                'Position': 'rich_text',
+                'Status': 'status',
+                'Platform': 'select',
+                'Salary': 'rich_text',
+                'Source URL': 'url',
+                'Apply Link': 'url',
+                'Email': 'email',
+                'Match Score': 'number',
+                'Application Date': 'date'
+            };
+
+            const errors: string[] = [];
+
+            for (const [propName, expectedType] of Object.entries(expectedSchema)) {
+                if (!properties[propName]) {
+                    errors.push(`Missing property: "${propName}" (expected type: ${expectedType})`);
+                } else if (properties[propName].type !== expectedType) {
+                    errors.push(`Incorrect type for "${propName}": expected ${expectedType}, but found ${properties[propName].type}`);
+                }
+            }
+
+            return {
+                isConnectionValid: true,
+                isValid: errors.length === 0,
+                errors
+            };
+
+        } catch (error) {
+            console.error('Schema Validation Error:', error);
+            return { 
+                isConnectionValid: false,
+                isValid: false, 
+                errors: [`Network or API error during validation: ${(error as Error).message}`] 
+            };
         }
     }
 

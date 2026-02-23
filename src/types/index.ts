@@ -101,6 +101,12 @@ export interface DuplicateCheckResult {
   error?: string;
 }
 
+export interface NotionSchemaValidationResult {
+  isConnectionValid: boolean;
+  isValid: boolean;
+  errors: string[];
+}
+
 // ─── Selector Types ─────────────────────────────────────────────
 
 export type SelectorList = readonly string[];
