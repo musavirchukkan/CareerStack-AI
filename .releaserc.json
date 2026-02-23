@@ -1,0 +1,19 @@
+{
+  "branches": ["main"],
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    "@semantic-release/changelog",
+    ["@semantic-release/npm", {
+      "npmPublish": false
+    }],
+    ["@semantic-release/exec", {
+      "prepareCmd": "node -e \"const fs=require('fs'); const file='src/config/selectors.json'; const data=JSON.parse(fs.readFileSync(file)); data.version='${nextRelease.version}'; fs.writeFileSync(file, JSON.stringify(data, null, 4));\""
+    }],
+    ["@semantic-release/git", {
+      "assets": ["package.json", "package-lock.json", "src/manifest.json", "src/config/selectors.json", "CHANGELOG.md"],
+      "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+    }],
+    "@semantic-release/github"
+  ]
+}
