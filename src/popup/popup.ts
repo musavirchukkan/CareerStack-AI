@@ -22,6 +22,7 @@ const statusDiv = document.getElementById('status') as HTMLDivElement;
 const unsupportedDiv = document.getElementById('unsupported-state') as HTMLDivElement;
 const skeletonContainer = document.getElementById('skeleton-container') as HTMLDivElement;
 const errorMessageDiv = document.getElementById('error-message') as HTMLDivElement;
+const settingsBtn = document.getElementById('settingsBtn') as HTMLButtonElement;
 
 // Operation locks — prevent double-clicks and spam
 let isAnalyzing = false;
@@ -129,6 +130,9 @@ async function initializePopup(): Promise<void> {
   // Bind buttons
   analyzeBtn.addEventListener('click', runAIAnalysis);
   form.addEventListener('submit', saveToNotion);
+  settingsBtn?.addEventListener('click', () => {
+    chrome.runtime.openOptionsPage();
+  });
   document.getElementById('clearCacheBtn')?.addEventListener('click', async () => {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     const cacheKey = getCacheKey(tab.url!);
