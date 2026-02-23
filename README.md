@@ -29,15 +29,15 @@
 
 ## ✨ Features
 
-| Feature | Description |
-|---------|-------------|
-| 🔍 **Smart Job Scraping** | Automatically extracts company name, position, salary, and job URL from LinkedIn & Indeed |
+| Feature                    | Description                                                                                                      |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| 🔍 **Smart Job Scraping**  | Automatically extracts company name, position, salary, and job URL from LinkedIn & Indeed                        |
 | 🤖 **AI-Powered Analysis** | Uses Google Gemini or OpenAI to generate a match score, extract recruiter emails, and summarize job descriptions |
-| 📒 **Notion Integration** | Saves every application to your personal Notion database with one click — including the full job description |
-| 🔄 **Auto-Fetch** | Optionally scrapes job details as soon as you open a listing — zero clicks needed |
-| 🧠 **Resume Matching** | Compares your master resume against each job posting and scores the match |
-| 💾 **Smart Caching** | Caches scrape and AI results in session storage, so switching tabs doesn't lose your work |
-| 🔒 **Privacy-First** | All API keys and data stay in your browser's local storage — nothing is sent to our servers |
+| 📒 **Notion Integration**  | Saves every application to your personal Notion database with one click — including the full job description     |
+| 🔄 **Auto-Fetch**          | Optionally scrapes job details as soon as you open a listing — zero clicks needed                                |
+| 🧠 **Resume Matching**     | Compares your master resume against each job posting and scores the match                                        |
+| 💾 **Smart Caching**       | Caches scrape and AI results in session storage, so switching tabs doesn't lose your work                        |
+| 🔒 **Privacy-First**       | All API keys and data stay in your browser's local storage — nothing is sent to our servers                      |
 
 ---
 
@@ -101,29 +101,29 @@ Click the **CareerStack AI** icon in the toolbar, then open **Options** (right-c
 
 ### 1. Notion Setup
 
-| Step | Action |
-|------|--------|
+| Step                   | Action                                                                                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Create Integration** | Go to [notion.so/my-integrations](https://www.notion.so/my-integrations) and create a new integration. Copy the **Internal Integration Secret**. |
-| **Create Database** | Create a new Notion database with the properties listed below. |
-| **Share Database** | Click `···` on the database page → **Connect to** → select your integration. |
-| **Copy Database ID** | From the database URL, copy the ID between `notion.so/` and `?v=`. |
+| **Create Database**    | Create a new Notion database with the properties listed below.                                                                                   |
+| **Share Database**     | Click `···` on the database page → **Connect to** → select your integration.                                                                     |
+| **Copy Database ID**   | From the database URL, copy the ID between `notion.so/` and `?v=`.                                                                               |
 
 <details>
 <summary><strong>📋 Required Database Properties</strong> (auto-filled by extension)</summary>
 <br/>
 
-| Property | Type | Description |
-|----------|------|-------------|
-| **Company** | Title | Stores the company name |
-| **Position** | Text | Job title |
-| **Status** | Status | Default: "Not Applied" |
-| **Platform** | Select | Options: LinkedIn, Indeed, Other |
-| **Application Date** | Date | When saved |
-| **Email** | Email | Recruiter email |
-| **Source URL** | URL | Original job listing URL |
-| **Apply Link** | URL | External application link |
-| **Salary** | Text | Salary range |
-| **Match Score** | Number | AI-calculated match percentage |
+| Property             | Type   | Description                      |
+| -------------------- | ------ | -------------------------------- |
+| **Company**          | Title  | Stores the company name          |
+| **Position**         | Text   | Job title                        |
+| **Status**           | Status | Default: "Not Applied"           |
+| **Platform**         | Select | Options: LinkedIn, Indeed, Other |
+| **Application Date** | Date   | When saved                       |
+| **Email**            | Email  | Recruiter email                  |
+| **Source URL**       | URL    | Original job listing URL         |
+| **Apply Link**       | URL    | External application link        |
+| **Salary**           | Text   | Salary range                     |
+| **Match Score**      | Number | AI-calculated match percentage   |
 
 > [!IMPORTANT]
 > Property names are **case-sensitive** and must match exactly.
@@ -134,15 +134,15 @@ Click the **CareerStack AI** icon in the toolbar, then open **Options** (right-c
 <summary><strong>📋 Optional Database Properties</strong> (managed manually)</summary>
 <br/>
 
-| Property | Type |
-|----------|------|
-| Hiring Manager | Text |
-| Interview Date | Date |
+| Property         | Type         |
+| ---------------- | ------------ |
+| Hiring Manager   | Text         |
+| Interview Date   | Date         |
 | Interview Status | Multi-select |
-| Keywords | Multi-select |
-| Resume | Files |
-| Cover Letter | Files |
-| Place | Text |
+| Keywords         | Multi-select |
+| Resume           | Files        |
+| Cover Letter     | Files        |
+| Place            | Text         |
 
 </details>
 
@@ -167,6 +167,7 @@ The company, position, salary, and URL are auto-filled instantly.
 ### Step 2 — Run AI Analysis
 
 Click **✨ Run AI Analysis** to get:
+
 - A **Match Score** based on your resume
 - An extracted **Recruiter Email** (if found)
 - A concise **Job Summary**
@@ -179,12 +180,12 @@ Click **Save to Notion** to push the entry to your database. Open the saved Noti
 
 ## 🛠️ Troubleshooting
 
-| Problem | Solution |
-|---------|----------|
-| Job description not found | Make sure you're on the **full job details view**, not the list page |
-| AI error | Verify your API key is valid and you have remaining quota |
-| Notion error | Ensure the database is shared with your integration and property names match exactly |
-| Stale data | Use **Clear Cache & Rescrape** in the popup, or clear caches from Options |
+| Problem                   | Solution                                                                             |
+| ------------------------- | ------------------------------------------------------------------------------------ |
+| Job description not found | Make sure you're on the **full job details view**, not the list page                 |
+| AI error                  | Verify your API key is valid and you have remaining quota                            |
+| Notion error              | Ensure the database is shared with your integration and property names match exactly |
+| Stale data                | Use **Clear Cache & Rescrape** in the popup, or clear caches from Options            |
 
 ---
 
@@ -193,6 +194,7 @@ Click **Save to Notion** to push the entry to your database. Open the saved Noti
 Contributions are welcome! Please read the [Contributing Guide](CONTRIBUTING.md) for details on our development workflow, commit conventions, and how to submit pull requests.
 
 See also:
+
 - [Build Guide](BUILD.md) — local setup & development
 - [Changelog](CHANGELOG.md) — release history
 

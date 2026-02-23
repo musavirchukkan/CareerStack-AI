@@ -1,193 +1,259 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CareerStack AI</title>
-    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="../styles.css" />
     <style>
-        body {
-            width: 400px;
-            min-height: 500px;
-            padding: 1rem;
-            margin: 0;
-            background-color: var(--bg-color);
-        }
+      body {
+        width: 400px;
+        min-height: 500px;
+        padding: 1rem;
+        margin: 0;
+        background-color: var(--bg-color);
+      }
 
-        .container {
-            margin: 0;
-            padding: 0;
-            max-width: none;
-        }
+      .container {
+        margin: 0;
+        padding: 0;
+        max-width: none;
+      }
 
-        h1 {
-            font-size: 1.25rem;
-            margin-bottom: 1rem;
-            text-align: center;
-            color: var(--primary-color);
-        }
+      h1 {
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+        text-align: center;
+        color: var(--primary-color);
+      }
 
-        .field-row {
-            display: flex;
-            gap: 1rem;
-        }
+      .field-row {
+        display: flex;
+        gap: 1rem;
+      }
 
-        .field-row .form-group {
-            flex: 1;
-        }
+      .field-row .form-group {
+        flex: 1;
+      }
 
-        textarea.small {
-            min-height: 60px;
-        }
+      textarea.small {
+        min-height: 60px;
+      }
 
-        .actions {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            margin-top: 1.5rem;
-        }
+      .actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-top: 1.5rem;
+      }
 
-        .btn-secondary {
-            background-color: white;
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-        }
+      .btn-secondary {
+        background-color: white;
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+      }
 
-        .btn-secondary:hover {
-            background-color: #f1f5f9;
-        }
+      .btn-secondary:hover {
+        background-color: #f1f5f9;
+      }
 
-        .hidden {
-            display: none !important;
-        }
+      .hidden {
+        display: none !important;
+      }
 
-        #loading {
-            text-align: center;
-            padding: 2rem;
-            color: var(--text-secondary);
-        }
+      #loading {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-secondary);
+      }
 
-        .score-badge {
-            background: var(--text-primary);
-            color: white;
-            padding: 0.25rem 0.5rem;
-            border-radius: 999px;
-            font-size: 0.75rem;
-            float: right;
-        }
+      .score-badge {
+        background: var(--text-primary);
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        float: right;
+      }
     </style>
-</head>
+  </head>
 
-<body>
+  <body>
     <div id="loading" class="container">
-        <div id="skeleton-container">
-            <div class="skeleton skeleton-label" style="width: 50%; margin: 0 auto 1.5rem auto; height: 1.5rem;"></div>
-            <div class="form-group"><div class="skeleton skeleton-label"></div><div class="skeleton"></div></div>
-            <div class="form-group"><div class="skeleton skeleton-label"></div><div class="skeleton"></div></div>
-            <div class="field-row">
-                <div class="form-group"><div class="skeleton skeleton-label"></div><div class="skeleton"></div></div>
-                <div class="form-group"><div class="skeleton skeleton-label"></div><div class="skeleton"></div></div>
-            </div>
-            <div class="form-group"><div class="skeleton skeleton-label" style="margin-top:2rem;"></div><div class="skeleton" style="height: 3rem;"></div></div>
+      <div id="skeleton-container">
+        <div
+          class="skeleton skeleton-label"
+          style="width: 50%; margin: 0 auto 1.5rem auto; height: 1.5rem"
+        ></div>
+        <div class="form-group">
+          <div class="skeleton skeleton-label"></div>
+          <div class="skeleton"></div>
         </div>
-        <div id="error-message" class="hidden" style="color: var(--error-color); padding: 2rem; text-align: center;"></div>
+        <div class="form-group">
+          <div class="skeleton skeleton-label"></div>
+          <div class="skeleton"></div>
+        </div>
+        <div class="field-row">
+          <div class="form-group">
+            <div class="skeleton skeleton-label"></div>
+            <div class="skeleton"></div>
+          </div>
+          <div class="form-group">
+            <div class="skeleton skeleton-label"></div>
+            <div class="skeleton"></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="skeleton skeleton-label" style="margin-top: 2rem"></div>
+          <div class="skeleton" style="height: 3rem"></div>
+        </div>
+      </div>
+      <div
+        id="error-message"
+        class="hidden"
+        style="color: var(--error-color); padding: 2rem; text-align: center"
+      ></div>
     </div>
 
-    <div id="unsupported-state" class="container hidden" style="text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; padding: 2rem 1rem;">
-        <div style="font-size: 3.5rem; margin-bottom: 1rem;">💼</div>
-        <h2 style="color: var(--primary-color); margin-bottom: 0.5rem; font-size: 1.25rem;">Open a Job Posting</h2>
-        <p style="color: var(--text-secondary); margin-bottom: 2rem; line-height: 1.5; font-size: 0.95rem;">
-            CareerStack works specifically on job posting pages. Navigate to a job listing on LinkedIn or Indeed to analyze and save it.
-        </p>
-        <div style="width: 100%; display: flex; flex-direction: column; gap: 0.75rem;">
-            <a href="https://www.linkedin.com/jobs/" target="_blank" class="btn btn-primary" style="text-decoration: none; text-align: center; box-sizing: border-box;">Open LinkedIn Jobs</a>
-            <a href="https://www.indeed.com/" target="_blank" class="btn btn-secondary" style="text-decoration: none; text-align: center; box-sizing: border-box;">Open Indeed</a>
-        </div>
+    <div
+      id="unsupported-state"
+      class="container hidden"
+      style="
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 400px;
+        padding: 2rem 1rem;
+      "
+    >
+      <div style="font-size: 3.5rem; margin-bottom: 1rem">💼</div>
+      <h2 style="color: var(--primary-color); margin-bottom: 0.5rem; font-size: 1.25rem">
+        Open a Job Posting
+      </h2>
+      <p
+        style="
+          color: var(--text-secondary);
+          margin-bottom: 2rem;
+          line-height: 1.5;
+          font-size: 0.95rem;
+        "
+      >
+        CareerStack works specifically on job posting pages. Navigate to a job listing on LinkedIn
+        or Indeed to analyze and save it.
+      </p>
+      <div style="width: 100%; display: flex; flex-direction: column; gap: 0.75rem">
+        <a
+          href="https://www.linkedin.com/jobs/"
+          target="_blank"
+          class="btn btn-primary"
+          style="text-decoration: none; text-align: center; box-sizing: border-box"
+          >Open LinkedIn Jobs</a
+        >
+        <a
+          href="https://www.indeed.com/"
+          target="_blank"
+          class="btn btn-secondary"
+          style="text-decoration: none; text-align: center; box-sizing: border-box"
+          >Open Indeed</a
+        >
+      </div>
     </div>
 
     <div id="main-content" class="container hidden">
-        <h1>CareerStack AI</h1>
+      <h1>CareerStack AI</h1>
 
-        <form id="job-form">
-            <input type="hidden" id="companyUrl">
-            <input type="hidden" id="fullDescription">
-            <div class="form-group">
-                <label for="company">Company <span style="color:red">*</span></label>
-                <input type="text" id="company" required>
-            </div>
+      <form id="job-form">
+        <input type="hidden" id="companyUrl" />
+        <input type="hidden" id="fullDescription" />
+        <div class="form-group">
+          <label for="company">Company <span style="color: red">*</span></label>
+          <input type="text" id="company" required />
+        </div>
 
-            <div class="form-group">
-                <label for="position">Position <span style="color:red">*</span></label>
-                <input type="text" id="position" required>
-            </div>
+        <div class="form-group">
+          <label for="position">Position <span style="color: red">*</span></label>
+          <input type="text" id="position" required />
+        </div>
 
-            <div class="field-row">
-                <div class="form-group">
-                    <label for="platform">Platform</label>
-                    <select id="platform">
-                        <option value="LinkedIn">LinkedIn</option>
-                        <option value="Indeed">Indeed</option>
-                        <option value="Other">Other</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="status">Status</label>
-                    <select id="statusSelect">
-                        <option value="Not Applied" selected>Not Applied</option>
-                        <option value="Applied">Applied</option>
-                    </select>
-                </div>
-            </div>
+        <div class="field-row">
+          <div class="form-group">
+            <label for="platform">Platform</label>
+            <select id="platform">
+              <option value="LinkedIn">LinkedIn</option>
+              <option value="Indeed">Indeed</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="status">Status</label>
+            <select id="statusSelect">
+              <option value="Not Applied" selected>Not Applied</option>
+              <option value="Applied">Applied</option>
+            </select>
+          </div>
+        </div>
 
+        <div class="field-row">
+          <div class="form-group">
+            <label for="salary">Salary</label>
+            <input type="text" id="salary" placeholder="$100k - $120k" />
+          </div>
+          <div class="form-group">
+            <label for="email">Recruiter Email</label>
+            <input type="email" id="email" placeholder="Email" />
+          </div>
+        </div>
 
+        <div class="form-group">
+          <label for="link">Job Link</label>
+          <input type="url" id="link" readonly />
+        </div>
 
-            <div class="field-row">
-                <div class="form-group">
-                    <label for="salary">Salary</label>
-                    <input type="text" id="salary" placeholder="$100k - $120k">
-                </div>
-                <div class="form-group">
-                    <label for="email">Recruiter Email</label>
-                    <input type="email" id="email" placeholder="Email">
-                </div>
-            </div>
+        <div class="form-group">
+          <label for="appLink">Application Link (External)</label>
+          <input type="url" id="appLink" />
+        </div>
 
-            <div class="form-group">
-                <label for="link">Job Link</label>
-                <input type="url" id="link" readonly>
-            </div>
+        <div class="form-group">
+          <label for="aiScore"
+            >Match Score <span id="scoreDisplay" class="score-badge">--</span></label
+          >
+          <textarea
+            id="aiAnalysis"
+            class="small"
+            placeholder="AI Analysis will appear here..."
+            readonly
+          ></textarea>
+        </div>
 
-            <div class="form-group">
-                <label for="appLink">Application Link (External)</label>
-                <input type="url" id="appLink">
-            </div>
-
-            <div class="form-group">
-                <label for="aiScore">Match Score <span id="scoreDisplay" class="score-badge">--</span></label>
-                <textarea id="aiAnalysis" class="small" placeholder="AI Analysis will appear here..."
-                    readonly></textarea>
-            </div>
-
-
-
-            <div class="actions">
-                <button type="button" id="analyzeBtn" class="btn btn-secondary">
-                    ✨ Run AI Analysis
-                </button>
-                <button type="submit" id="saveBtn" class="btn btn-primary">
-                    Save to Notion
-                </button>
-                <button type="button" id="clearCacheBtn" style="background:none;border:none;color:var(--text-secondary);font-size:0.75rem;cursor:pointer;padding:0.25rem;text-decoration:underline;">
-                    🔄 Clear Cache &amp; Rescrape
-                </button>
-            </div>
-        </form>
+        <div class="actions">
+          <button type="button" id="analyzeBtn" class="btn btn-secondary">
+            ✨ Run AI Analysis
+          </button>
+          <button type="submit" id="saveBtn" class="btn btn-primary">Save to Notion</button>
+          <button
+            type="button"
+            id="clearCacheBtn"
+            style="
+              background: none;
+              border: none;
+              color: var(--text-secondary);
+              font-size: 0.75rem;
+              cursor: pointer;
+              padding: 0.25rem;
+              text-decoration: underline;
+            "
+          >
+            🔄 Clear Cache &amp; Rescrape
+          </button>
+        </div>
+      </form>
     </div>
 
     <div id="status"></div>
 
     <script src="./popup.ts" type="module"></script>
-</body>
-
+  </body>
 </html>

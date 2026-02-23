@@ -1,101 +1,125 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CareerStack AI Settings</title>
-    <link rel="stylesheet" href="../styles.css">
-</head>
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
 
-<body class="options-page">
+  <body class="options-page">
     <div class="container">
-        <h1>CareerStack AI Configuration</h1>
+      <h1>CareerStack AI Configuration</h1>
 
-        <form id="options-form">
-            <!-- Notion Settings -->
-            <div class="card">
-                <h2>Notion Integration</h2>
-                <div class="form-group">
-                    <label for="notionSecret">
-                        Notion Integration Secret
-                        <span style="display: inline-flex; gap: 0.5rem; margin-left: auto;">
-                            <span id="notionStatus" class="verification-badge hidden">✅ Verified</span>
-                            <span id="schemaStatus" class="verification-badge hidden">✅ Schema Matched</span>
-                        </span>
-                    </label>
-                    <input type="password" id="notionSecret" placeholder="secret_..." required>
-                    <p class="helper-text">Create an integration at <a href="https://www.notion.so/my-integrations"
-                            target="_blank">notion.so/my-integrations</a></p>
-                </div>
-                <!-- Schema Error Box -->
-                <div id="schemaErrorBox" class="hidden" style="background-color: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem; font-size: 0.875rem;">
-                    <strong>Schema Validation Failed:</strong>
-                    <ul id="schemaErrorList" style="margin-top: 0.5rem; margin-bottom: 0; padding-left: 1.5rem;"></ul>
-                </div>
-                <div class="form-group">
-                    <label for="databaseId">Database ID</label>
-                    <input type="text" id="databaseId" placeholder="32-character ID" required>
-                    <p class="helper-text">Open your database as a page and copy the ID from the URL.</p>
-                </div>
-            </div>
+      <form id="options-form">
+        <!-- Notion Settings -->
+        <div class="card">
+          <h2>Notion Integration</h2>
+          <div class="form-group">
+            <label for="notionSecret">
+              Notion Integration Secret
+              <span style="display: inline-flex; gap: 0.5rem; margin-left: auto">
+                <span id="notionStatus" class="verification-badge hidden">✅ Verified</span>
+                <span id="schemaStatus" class="verification-badge hidden">✅ Schema Matched</span>
+              </span>
+            </label>
+            <input type="password" id="notionSecret" placeholder="secret_..." required />
+            <p class="helper-text">
+              Create an integration at
+              <a href="https://www.notion.so/my-integrations" target="_blank"
+                >notion.so/my-integrations</a
+              >
+            </p>
+          </div>
+          <!-- Schema Error Box -->
+          <div
+            id="schemaErrorBox"
+            class="hidden"
+            style="
+              background-color: #fee2e2;
+              border: 1px solid #fca5a5;
+              color: #991b1b;
+              padding: 0.75rem;
+              border-radius: 4px;
+              margin-bottom: 1rem;
+              font-size: 0.875rem;
+            "
+          >
+            <strong>Schema Validation Failed:</strong>
+            <ul
+              id="schemaErrorList"
+              style="margin-top: 0.5rem; margin-bottom: 0; padding-left: 1.5rem"
+            ></ul>
+          </div>
+          <div class="form-group">
+            <label for="databaseId">Database ID</label>
+            <input type="text" id="databaseId" placeholder="32-character ID" required />
+            <p class="helper-text">Open your database as a page and copy the ID from the URL.</p>
+          </div>
+        </div>
 
-            <!-- AI Settings -->
-            <div class="card">
-                <h2>AI Configuration</h2>
-                <div class="form-group">
-                    <label for="aiProvider">AI Provider</label>
-                    <select id="aiProvider">
-                        <option value="gemini">Google Gemini</option>
-                        <option value="openai">OpenAI (GPT-4/3.5)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="aiKey">
-                        API Key
-                        <span id="aiKeyStatus" class="verification-badge hidden">✅ Verified</span>
-                    </label>
-                    <input type="password" id="aiKey" placeholder="Enter your API Key" required>
-                    <p class="helper-text">Your key is stored locally and never sent to our servers.</p>
-                </div>
-            </div>
+        <!-- AI Settings -->
+        <div class="card">
+          <h2>AI Configuration</h2>
+          <div class="form-group">
+            <label for="aiProvider">AI Provider</label>
+            <select id="aiProvider">
+              <option value="gemini">Google Gemini</option>
+              <option value="openai">OpenAI (GPT-4/3.5)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="aiKey">
+              API Key
+              <span id="aiKeyStatus" class="verification-badge hidden">✅ Verified</span>
+            </label>
+            <input type="password" id="aiKey" placeholder="Enter your API Key" required />
+            <p class="helper-text">Your key is stored locally and never sent to our servers.</p>
+          </div>
+        </div>
 
-            <!-- User Context -->
-            <div class="card">
-                <h2>Your Profile</h2>
-                <div class="form-group">
-                    <label for="masterResume">Master Resume</label>
-                    <textarea id="masterResume"
-                        placeholder="Paste your full resume text or markdown here..."></textarea>
-                    <p class="helper-text">The AI uses this to compare your profile against job descriptions.</p>
-                </div>
+        <!-- User Context -->
+        <div class="card">
+          <h2>Your Profile</h2>
+          <div class="form-group">
+            <label for="masterResume">Master Resume</label>
+            <textarea
+              id="masterResume"
+              placeholder="Paste your full resume text or markdown here..."
+            ></textarea>
+            <p class="helper-text">
+              The AI uses this to compare your profile against job descriptions.
+            </p>
+          </div>
 
-                <div class="form-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="autoFetch">
-                        <span>Auto-fetch job details on page load</span>
-                    </label>
-                </div>
-            </div>
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="autoFetch" />
+              <span>Auto-fetch job details on page load</span>
+            </label>
+          </div>
+        </div>
 
-            <!-- Cache Management -->
-            <div class="card">
-                <h2>Cache Management</h2>
-                <p class="helper-text" style="margin-bottom: 0.75rem;">Cached scrape and AI analysis results are stored in session storage. Clear them if you're seeing stale data.</p>
-                <button type="button" id="clearAllCacheBtn" class="btn btn-secondary" style="width: auto;">
-                    🗑️ Clear All Caches
-                </button>
-            </div>
+        <!-- Cache Management -->
+        <div class="card">
+          <h2>Cache Management</h2>
+          <p class="helper-text" style="margin-bottom: 0.75rem">
+            Cached scrape and AI analysis results are stored in session storage. Clear them if
+            you're seeing stale data.
+          </p>
+          <button type="button" id="clearAllCacheBtn" class="btn btn-secondary" style="width: auto">
+            🗑️ Clear All Caches
+          </button>
+        </div>
 
-            <div style="text-align: right;">
-                <button type="submit" id="saveBtn" class="btn btn-primary">Save Settings</button>
-            </div>
-        </form>
+        <div style="text-align: right">
+          <button type="submit" id="saveBtn" class="btn btn-primary">Save Settings</button>
+        </div>
+      </form>
     </div>
 
     <div id="status">Settings saved!</div>
 
     <script src="./options.ts" type="module"></script>
-</body>
-
+  </body>
 </html>

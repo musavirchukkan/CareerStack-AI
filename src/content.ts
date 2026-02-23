@@ -14,68 +14,70 @@ import { sanitizeText } from './utils/dom-utils';
  * Returns the appropriate scraper for the current URL, or null if unsupported.
  */
 function getScraperForUrl(url: string): BaseScraper | null {
-    const isLinkedInJob = url.includes('linkedin.com/jobs/') || url.includes('linkedin.com/jobs/view/');
-    const isIndeedJob = url.includes('indeed.com/viewjob') || url.includes('indeed.com/jobs');
+  const isLinkedInJob =
+    url.includes('linkedin.com/jobs/') || url.includes('linkedin.com/jobs/view/');
+  const isIndeedJob = url.includes('indeed.com/viewjob') || url.includes('indeed.com/jobs');
 
-    if (isLinkedInJob) return new LinkedInScraper();
-    if (isIndeedJob) return new IndeedScraper();
-    return null;
+  if (isLinkedInJob) return new LinkedInScraper();
+  if (isIndeedJob) return new IndeedScraper();
+  return null;
 }
 
 /**
  * Scrapes job data from the current page using the appropriate strategy.
  */
 async function scrapeJobData(): Promise<JobData> {
-    const url = window.location.href;
-    const data: JobData = {
-        url: sanitizeText(url),
-        platform: 'Other',
-        company: '',
-        position: '',
-        salary: '',
-        description: '',
-        appLink: ''
-    };
+  const url = window.location.href;
+  const data: JobData = {
+    url: sanitizeText(url),
+    platform: 'Other',
+    company: '',
+    position: '',
+    salary: '',
+    description: '',
+    appLink: '',
+  };
 
-    const scraper = getScraperForUrl(url);
-    if (scraper) {
-        try {
-            // First, get the dynamic selectors from the background (which caches them)
-            // We use .catch(() => undefined) to fallback gracefully
-            const config = await chrome.runtime.sendMessage({ action: 'GET_SELECTORS' })
-                .catch(() => undefined);
+  const scraper = getScraperForUrl(url);
+  if (scraper) {
+    try {
+      // First, get the dynamic selectors from the background (which caches them)
+      // We use .catch(() => undefined) to fallback gracefully
+      const config = await chrome.runtime
+        .sendMessage({ action: 'GET_SELECTORS' })
+        .catch(() => undefined);
 
-            const result = scraper.scrape(data, config);
-            result.company = sanitizeText(result.company);
-            result.position = sanitizeText(result.position);
-            result.salary = sanitizeText(result.salary);
-            result.description = sanitizeText(result.description);
-            result.appLink = sanitizeText(result.appLink);
-            if (result.companyUrl) result.companyUrl = sanitizeText(result.companyUrl);
-            
-            const missing = [];
-            if (!result.company) missing.push('Company');
-            if (!result.position) missing.push('Position');
-            if (!result.description) missing.push('Description');
-            
-            if (missing.length > 0) {
-                result.warnings = [`Missing fields: ${missing.join(', ')}`];
-            }
-            return result;
-        } catch (error) {
-            console.error('Scraping error:', error);
-            data.warnings = ['A critical error occurred while scraping. Some fields may be missing.'];
-            return data;
-        }
+      const result = scraper.scrape(data, config);
+      result.company = sanitizeText(result.company);
+      result.position = sanitizeText(result.position);
+      result.salary = sanitizeText(result.salary);
+      result.description = sanitizeText(result.description);
+      result.appLink = sanitizeText(result.appLink);
+      if (result.companyUrl) result.companyUrl = sanitizeText(result.companyUrl);
+
+      const missing = [];
+      if (!result.company) missing.push('Company');
+      if (!result.position) missing.push('Position');
+      if (!result.description) missing.push('Description');
+
+      if (missing.length > 0) {
+        result.warnings = [`Missing fields: ${missing.join(', ')}`];
+      }
+      return result;
+    } catch (error) {
+      console.error('Scraping error:', error);
+      data.warnings = ['A critical error occurred while scraping. Some fields may be missing.'];
+      return data;
     }
+  }
 
-    return data;
+  return data;
 }
 
 // Listen for messages from the popup
 chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
-    if (request.action === 'SCRAPE_JOB') {
-        scrapeJobData().then(sendResponse);
-        return true; // Keep channel open for async scrape
-    }
+  if (request.action === 'SCRAPE_JOB') {
+    scrapeJobData().then(sendResponse);
+    return true; // Keep channel open for async scrape
+  }
 });
