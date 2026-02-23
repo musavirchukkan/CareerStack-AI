@@ -7,7 +7,6 @@ on:
 
 jobs:
   release:
-    # Improved loop prevention: check the actor/author instead of just the message
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     permissions:
@@ -33,7 +32,16 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Run semantic-release
+        id: release
         env:
           GITHUB_TOKEN: ${{ secrets.GH_BOT_TOKEN }}
         run: npx --yes semantic-release
 
+      - name: Sync selectors.json to Gist
+        if: success()
+        uses: exuanbo/actions-deploy-gist@v1
+        with:
+          token: ${{ secrets.GIST_SECRET_TOKEN }}
+          gist_id: ${{ vars.GIST_ID }}
+          gist_file_name: selectors.json
+          file_path: src/config/selectors.json
