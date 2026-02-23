@@ -1,3 +1,10 @@
+# [2.3.0](https://github.com/musavirchukkan/CareerStack-AI/compare/v2.2.2...v2.3.0) (2026-02-23)
+
+
+### Features
+
+* notion schema validation and ai credential refactor ([6393e35](https://github.com/musavirchukkan/CareerStack-AI/commit/6393e359cf95f7b5a23461832d607690107c1361))
+
 # Changelog
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
