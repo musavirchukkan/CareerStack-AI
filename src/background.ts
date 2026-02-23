@@ -10,9 +10,13 @@ import { ConfigService } from './services/ConfigService';
 import type { ExtensionMessage } from './types';
 
 // Setup periodic fetch for dynamic scrapers over the air updates
-chrome.runtime.onInstalled.addListener(() => {
+chrome.runtime.onInstalled.addListener((details) => {
     ConfigService.fetchAndCache().catch(console.error);
     chrome.alarms.create('refresh-selectors', { periodInMinutes: 360 }); // 6 hours
+
+    if (details.reason === chrome.runtime.OnInstalledReason.INSTALL) {
+        chrome.tabs.create({ url: 'options/options.html' });
+    }
 });
 
 chrome.alarms.onAlarm.addListener((alarm) => {

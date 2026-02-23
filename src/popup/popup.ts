@@ -19,6 +19,9 @@ const saveBtn = document.getElementById('saveBtn') as HTMLButtonElement;
 const loadingDiv = document.getElementById('loading') as HTMLDivElement;
 const contentDiv = document.getElementById('main-content') as HTMLDivElement;
 const statusDiv = document.getElementById('status') as HTMLDivElement;
+const unsupportedDiv = document.getElementById('unsupported-state') as HTMLDivElement;
+const skeletonContainer = document.getElementById('skeleton-container') as HTMLDivElement;
+const errorMessageDiv = document.getElementById('error-message') as HTMLDivElement;
 
 // Operation locks — prevent double-clicks and spam
 let isAnalyzing = false;
@@ -119,7 +122,7 @@ async function initializePopup(): Promise<void> {
             await scrapeAndCache(tab, cacheKey);
         }
     } else {
-        showError('This site is not supported. Navigate to LinkedIn or Indeed.');
+        showUnsupported();
     }
 
     // Bind buttons
@@ -178,7 +181,7 @@ async function scrapeAndCache(tab: chrome.tabs.Tab, cacheKey: string): Promise<v
                 }
             } catch (injectError) {
                 console.error("Script injection failed:", injectError);
-                showError('Extension cannot run on this page. Try refreshing.');
+                showUnsupported();
             }
         }
     } catch (error) {
@@ -430,6 +433,13 @@ function showStatusHTML(html: string, type: string, timeout = 4000): void {
 }
 
 function showError(msg: string): void {
-    loadingDiv.textContent = msg;
-    loadingDiv.style.color = 'var(--error-color)';
+    skeletonContainer.classList.add('hidden');
+    errorMessageDiv.textContent = msg;
+    errorMessageDiv.classList.remove('hidden');
+}
+
+function showUnsupported(): void {
+    loadingDiv.classList.add('hidden');
+    contentDiv.classList.add('hidden');
+    unsupportedDiv.classList.remove('hidden');
 }
