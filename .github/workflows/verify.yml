@@ -7,37 +7,52 @@ on:
 
 jobs:
   typecheck:
+    name: 🔍 Type Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '22.x'
-      - run: npm ci
-      - run: npm run typecheck
+      - name: 📦 Install Dependencies
+        run: npm ci
+      - name: 🔍 Run Type Check
+        run: npm run typecheck
 
   test:
+    name: 🧪 Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '22.x'
-      - run: npm ci
-      - run: npm run test
+      - name: 📦 Install Dependencies
+        run: npm ci
+      - name: 🧪 Run Tests
+        run: npm run test
 
   build:
+    name: 🏗️ Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '22.x'
-      - run: npm ci
-      - run: npm run build
+      - name: 📦 Install Dependencies
+        run: npm ci
+      - name: 🏗️ Build Extension
+        run: npm run build
 
-  # Gate job — your branch protection rule points to this
   verify:
+    name: ✅ All Checks Passed
     needs: [typecheck, test, build]
     runs-on: ubuntu-latest
     steps:
