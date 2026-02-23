@@ -1,69 +1,75 @@
 {
-  "version": "2.3.2",
-  "linkedin": {
-    "position": [
-      ".job-details-jobs-unified-top-card__job-title-link",
-      "h1.t-24",
-      "h1",
-      ".top-card-layout__title"
-    ],
-    "company": [
-      ".job-details-jobs-unified-top-card__company-name a",
-      ".job-details-jobs-unified-top-card__company-name",
-      ".topcard__org-name-link"
-    ],
-    "companyUrl": [
-      ".job-details-jobs-unified-top-card__company-name a[href]",
-      ".topcard__org-name-link[href]"
-    ],
-    "salary": [
-      ".job-details-jobs-unified-top-card__job-insight-view-model-secondary",
-      ".num-applicants__caption",
-      ".salary-compensation"
-    ],
-    "description": [
-      "[data-sdui-component*=\"aboutTheJob\"] [data-testid=\"expandable-text-box\"]",
-      "[componentkey*=\"AboutTheJob\"] [data-testid=\"expandable-text-box\"]",
-      "#job-details",
-      ".jobs-description-content__text",
-      ".jobs-description__content .jobs-box__html-content",
-      ".jobs-description__container",
-      ".show-more-less-html__markup",
-      "[class*=\"jobs-description\"]",
-      "article .jobs-description"
-    ],
-    "appLink": [
-      ".jobs-apply-button--top-card button",
-      ".jobs-apply-button--top-card a",
-      "a[aria-label^=\"Apply on company website\"]",
-      ".apply-button"
-    ]
-  },
-  "indeed": {
-    "position": [
-      ".jobsearch-JobInfoHeader-title",
-      "h1.jobsearch-JobInfoHeader-title",
-      ".jobsearch-JobInfoHeader-title-container h1",
-      "h1[class*=\"JobInfoHeader\"]"
-    ],
-    "company": [
-      "[data-company-name=\"true\"]",
-      "[data-testid=\"company-name\"]",
-      ".jobsearch-CompanyInfoContainer a",
-      ".jobsearch-InlineCompanyRating a"
-    ],
-    "companyUrl": [".jobsearch-CompanyInfoContainer a[href]"],
-    "salary": ["#salaryInfoAndJobType", ".jobsearch-JobMetadataHeader-item", "[class*=\"salary\"]"],
-    "description": [
-      "#jobDescriptionText",
-      ".jobsearch-JobComponent-description",
-      ".jobsearch-jobDescriptionText",
-      "#jobDescription"
-    ],
-    "appLink": [
-      "#applyButtonLinkContainer a",
-      ".jobsearch-IndeedApplyButton-contentWrapper a",
-      "a[data-testid=\"indeedApplyButton\"]"
-    ]
-  }
+    "version": "2.4.0",
+    "linkedin": {
+        "position": [
+            ".job-details-jobs-unified-top-card__job-title-link",
+            "h1.t-24",
+            "h1",
+            ".top-card-layout__title"
+        ],
+        "company": [
+            ".job-details-jobs-unified-top-card__company-name a",
+            ".job-details-jobs-unified-top-card__company-name",
+            ".topcard__org-name-link"
+        ],
+        "companyUrl": [
+            ".job-details-jobs-unified-top-card__company-name a[href]",
+            ".topcard__org-name-link[href]"
+        ],
+        "salary": [
+            ".job-details-jobs-unified-top-card__job-insight-view-model-secondary",
+            ".num-applicants__caption",
+            ".salary-compensation"
+        ],
+        "description": [
+            "[data-sdui-component*=\"aboutTheJob\"] [data-testid=\"expandable-text-box\"]",
+            "[componentkey*=\"AboutTheJob\"] [data-testid=\"expandable-text-box\"]",
+            "#job-details",
+            ".jobs-description-content__text",
+            ".jobs-description__content .jobs-box__html-content",
+            ".jobs-description__container",
+            ".show-more-less-html__markup",
+            "[class*=\"jobs-description\"]",
+            "article .jobs-description"
+        ],
+        "appLink": [
+            ".jobs-apply-button--top-card button",
+            ".jobs-apply-button--top-card a",
+            "a[aria-label^=\"Apply on company website\"]",
+            ".apply-button"
+        ]
+    },
+    "indeed": {
+        "position": [
+            ".jobsearch-JobInfoHeader-title",
+            "h1.jobsearch-JobInfoHeader-title",
+            ".jobsearch-JobInfoHeader-title-container h1",
+            "h1[class*=\"JobInfoHeader\"]"
+        ],
+        "company": [
+            "[data-company-name=\"true\"]",
+            "[data-testid=\"company-name\"]",
+            ".jobsearch-CompanyInfoContainer a",
+            ".jobsearch-InlineCompanyRating a"
+        ],
+        "companyUrl": [
+            ".jobsearch-CompanyInfoContainer a[href]"
+        ],
+        "salary": [
+            "#salaryInfoAndJobType",
+            ".jobsearch-JobMetadataHeader-item",
+            "[class*=\"salary\"]"
+        ],
+        "description": [
+            "#jobDescriptionText",
+            ".jobsearch-JobComponent-description",
+            ".jobsearch-jobDescriptionText",
+            "#jobDescription"
+        ],
+        "appLink": [
+            "#applyButtonLinkContainer a",
+            ".jobsearch-IndeedApplyButton-contentWrapper a",
+            "a[data-testid=\"indeedApplyButton\"]"
+        ]
+    }
 }
