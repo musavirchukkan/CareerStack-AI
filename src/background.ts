@@ -6,7 +6,20 @@
  */
 import { AIService } from './services/AIService';
 import { NotionService } from './services/NotionService';
+import { ConfigService } from './services/ConfigService';
 import type { ExtensionMessage } from './types';
+
+// Setup periodic fetch for dynamic scrapers over the air updates
+chrome.runtime.onInstalled.addListener(() => {
+    ConfigService.fetchAndCache().catch(console.error);
+    chrome.alarms.create('refresh-selectors', { periodInMinutes: 360 }); // 6 hours
+});
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+    if (alarm.name === 'refresh-selectors') {
+        ConfigService.fetchAndCache().catch(console.error);
+    }
+});
 
 chrome.runtime.onMessage.addListener((request: ExtensionMessage, _sender, sendResponse) => {
     if (request.action === 'ANALYZE_JOB') {
@@ -19,6 +32,10 @@ chrome.runtime.onMessage.addListener((request: ExtensionMessage, _sender, sendRe
     }
     if (request.action === 'CHECK_DUPLICATE') {
         NotionService.checkDuplicate(request.url).then(sendResponse);
+        return true; // async response
+    }
+    if (request.action === 'GET_SELECTORS') {
+        ConfigService.getSelectors().then(sendResponse);
         return true; // async response
     }
 });

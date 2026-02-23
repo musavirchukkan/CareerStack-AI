@@ -5,6 +5,7 @@
 import type { NotionSaveData, NotionSaveResult, DuplicateCheckResult, DescriptionBlock } from '../types';
 import { fetchWithRetry, getReadableError } from '../utils/retry';
 import { decryptData } from '../utils/encryption';
+import { CONFIG } from '../config/constants';
 
 export class NotionService {
     /**
@@ -20,13 +21,13 @@ export class NotionService {
             const decryptedSecret = await decryptData(settings.notionSecret);
 
             const response = await fetchWithRetry(
-                `https://api.notion.com/v1/databases/${settings.databaseId}/query`,
+                `${CONFIG.NOTION.BASE_URL}/databases/${settings.databaseId}/query`,
                 {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${decryptedSecret}`,
                         'Content-Type': 'application/json',
-                        'Notion-Version': '2022-06-28'
+                        'Notion-Version': CONFIG.NOTION.API_VERSION
                     },
                     body: JSON.stringify({
                         filter: {
@@ -134,12 +135,12 @@ export class NotionService {
                 });
             }
 
-            const response = await fetchWithRetry('https://api.notion.com/v1/pages', {
+            const response = await fetchWithRetry(`${CONFIG.NOTION.BASE_URL}/pages`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${decryptedSecret}`,
                     'Content-Type': 'application/json',
-                    'Notion-Version': '2022-06-28'
+                    'Notion-Version': CONFIG.NOTION.API_VERSION
                 },
                 body: JSON.stringify(body)
             });

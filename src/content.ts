@@ -25,7 +25,7 @@ function getScraperForUrl(url: string): BaseScraper | null {
 /**
  * Scrapes job data from the current page using the appropriate strategy.
  */
-function scrapeJobData(): JobData {
+async function scrapeJobData(): Promise<JobData> {
     const url = window.location.href;
     const data: JobData = {
         url: sanitizeText(url),
@@ -40,7 +40,12 @@ function scrapeJobData(): JobData {
     const scraper = getScraperForUrl(url);
     if (scraper) {
         try {
-            const result = scraper.scrape(data);
+            // First, get the dynamic selectors from the background (which caches them)
+            // We use .catch(() => undefined) to fallback gracefully
+            const config = await chrome.runtime.sendMessage({ action: 'GET_SELECTORS' })
+                .catch(() => undefined);
+
+            const result = scraper.scrape(data, config);
             result.company = sanitizeText(result.company);
             result.position = sanitizeText(result.position);
             result.salary = sanitizeText(result.salary);
@@ -70,8 +75,7 @@ function scrapeJobData(): JobData {
 // Listen for messages from the popup
 chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
     if (request.action === 'SCRAPE_JOB') {
-        const data = scrapeJobData();
-        sendResponse(data);
+        scrapeJobData().then(sendResponse);
+        return true; // Keep channel open for async scrape
     }
-    return true;
 });

@@ -2,9 +2,9 @@
  * LinkedInScraper — Handles job data extraction from LinkedIn job pages.
  * Supports both search/collections pages (right rail) and single job view pages.
  */
-import type { JobData } from '../types';
+import type { JobData, RemoteConfig } from '../types';
 import { BaseScraper } from './BaseScraper';
-import { LINKEDIN_SELECTORS } from './selectors/linkedin';
+import fallbackConfigData from '../config/selectors.json';
 import { extractJobDescription, extractEmails } from '../utils/dom-utils';
 
 export class LinkedInScraper extends BaseScraper {
@@ -12,9 +12,10 @@ export class LinkedInScraper extends BaseScraper {
         return 'LinkedIn';
     }
 
-    scrape(data: JobData): JobData {
+    scrape(data: JobData, config?: RemoteConfig): JobData {
         data.platform = this.getPlatformName();
-        const S = LINKEDIN_SELECTORS;
+        const fallback = fallbackConfigData as unknown as RemoteConfig;
+        const dynamicSelectors = config?.linkedin || fallback.linkedin;
 
         // URL Cleaning
         const urlObj = new URL(window.location.href);
@@ -26,18 +27,19 @@ export class LinkedInScraper extends BaseScraper {
         }
 
         // Strategy 1: Job Collections / Search Page (Right Rail)
-        const detailContainer = this._queryFirst(S.container);
+        // Hardcoded container since we flattened the JSON to only hold fields, this container rarely changes
+        const detailContainer = this._queryFirst([".job-details-jobs-unified-top-card__container", ".job-view-layout"]);
 
         if (detailContainer) {
-            this._scrapeDetailContainer(data, detailContainer);
+            this._scrapeDetailContainer(data, detailContainer, dynamicSelectors);
         }
         // Strategy 2: Single Job Page (Full View)
         else {
-            this._scrapeSingleJobPage(data);
+            this._scrapeSingleJobPage(data, dynamicSelectors);
         }
 
         // Apply Link (Direct Page — works for both strategies)
-        this._scrapeDirectApplyLink(data);
+        this._scrapeDirectApplyLink(data, dynamicSelectors);
 
         // Last Resort: LD-JSON script tags
         this._scrapeLDJson(data);
@@ -109,19 +111,19 @@ export class LinkedInScraper extends BaseScraper {
         }
     }
 
-    private _scrapeDetailContainer(data: JobData, detailContainer: Element): void {
-        const S = LINKEDIN_SELECTORS.detail;
-
-        // Title — try selectors first, then document title parsing
-        const titleEl = this._queryFirst(S.title, detailContainer) as HTMLElement | null;
+    private _scrapeDetailContainer(data: JobData, detailContainer: Element, dynamicSelectors: RemoteConfig['linkedin']): void {
+        // Title — try dynamic config first
+        const titleSelectors = dynamicSelectors.position;
+        const titleEl = this._queryFirst(titleSelectors, detailContainer) as HTMLElement | null;
         if (titleEl) data.position = titleEl.innerText.trim();
 
         // Company — try direct selectors first
-        let companyEl = this._queryFirst(S.company, detailContainer);
+        const companySelectors = dynamicSelectors.company;
+        let companyEl = this._queryFirst(companySelectors, detailContainer);
 
         // Fallback: aria-label="Company, Xyz." (LinkedIn 2026 SDUI)
-        if (!companyEl && S.companyAria) {
-            const ariaEl = detailContainer.querySelector(S.companyAria);
+        if (!companyEl) {
+            const ariaEl = detailContainer.querySelector('[aria-label^="Company, "]');
             if (ariaEl) {
                 const ariaVal = ariaEl.getAttribute('aria-label') || '';
                 const match = ariaVal.match(/^Company,\s*(.+?)\.?$/);
@@ -145,20 +147,23 @@ export class LinkedInScraper extends BaseScraper {
         }
 
         // Salary
-        const salaryEl = this._queryFirst(S.salary, detailContainer) as HTMLElement | null;
+        const salarySelectors = dynamicSelectors.salary;
+        const salaryEl = this._queryFirst(salarySelectors, detailContainer) as HTMLElement | null;
         if (salaryEl) data.salary = salaryEl.innerText.trim();
 
         // Description — try within container first, then globally
-        let descEl = this._queryFirst(S.description, detailContainer) as HTMLElement | null;
-        if (!descEl) descEl = this._queryFirst(S.description) as HTMLElement | null;
+        const descSelectors = dynamicSelectors.description;
+        let descEl = this._queryFirst(descSelectors, detailContainer) as HTMLElement | null;
+        if (!descEl) descEl = this._queryFirst(descSelectors) as HTMLElement | null;
         if (descEl) {
             const { text, blocks } = extractJobDescription(descEl);
             data.description = text;
             data.descriptionBlocks = blocks;
         }
 
-        // Apply Link — try selectors
-        for (const selector of S.apply) {
+        // Apply Link — try dynamic config selectors first
+        const applySelectors = dynamicSelectors.appLink;
+        for (const selector of applySelectors) {
             const el = detailContainer.querySelector(selector);
             if (el) {
                 if (el.tagName === 'A') {
@@ -175,7 +180,7 @@ export class LinkedInScraper extends BaseScraper {
 
         // Fallback: heuristic — find button/link with "Apply" text
         if (!data.appLink) {
-            const topCard = this._queryFirst(S.topCard, detailContainer) || detailContainer;
+            const topCard = detailContainer;
 
             const buttons = topCard.querySelectorAll('button, a');
             for (const btn of buttons) {
@@ -196,19 +201,19 @@ export class LinkedInScraper extends BaseScraper {
         }
     }
 
-    private _scrapeSingleJobPage(data: JobData): void {
-        const S = LINKEDIN_SELECTORS.single;
-
+    private _scrapeSingleJobPage(data: JobData, dynamicSelectors: RemoteConfig['linkedin']): void {
         // Title
-        const titleEl = this._queryFirst(S.title) as HTMLElement | null;
+        const titleSelectors = dynamicSelectors.position;
+        const titleEl = this._queryFirst(titleSelectors) as HTMLElement | null;
         if (titleEl) data.position = titleEl.innerText.trim();
 
-        // Company — try direct selectors first
-        let companyEl = this._queryFirst(S.company);
+        // Company — try dynamic config selectors first
+        const companySelectors = dynamicSelectors.company;
+        let companyEl = this._queryFirst(companySelectors);
 
         // Fallback: aria-label
         if (!companyEl) {
-            const companyAria = document.querySelector(S.companyAria);
+            const companyAria = document.querySelector('[aria-label^="Company, "]');
             if (companyAria) {
                 companyEl = companyAria.tagName === 'A' ? companyAria : companyAria.closest('a');
                 if (!companyEl) companyEl = companyAria;
@@ -217,8 +222,8 @@ export class LinkedInScraper extends BaseScraper {
 
         // Fallback: company link within top section
         if (!companyEl) {
-            const topSection = this._queryFirst(S.companyTopSection) || document.body;
-            companyEl = topSection.querySelector(S.companyLink);
+            const topSection = this._queryFirst(['.top-card-layout']) || document.body;
+            companyEl = topSection.querySelector('a[href*="/company/"]');
         }
 
         if (companyEl) {
@@ -237,7 +242,8 @@ export class LinkedInScraper extends BaseScraper {
         }
 
         // Description — try all selectors globally
-        const descEl = this._queryFirst(S.description) as HTMLElement | null;
+        const descSelectors = dynamicSelectors.description;
+        const descEl = this._queryFirst(descSelectors) as HTMLElement | null;
         if (descEl) {
             const { text, blocks } = extractJobDescription(descEl);
             data.description = text;
@@ -245,8 +251,11 @@ export class LinkedInScraper extends BaseScraper {
         }
     }
 
-    private _scrapeDirectApplyLink(data: JobData): void {
-        const applyBtn = document.querySelector(LINKEDIN_SELECTORS.directApply) as HTMLAnchorElement | null;
+    private _scrapeDirectApplyLink(data: JobData, dynamicSelectors: RemoteConfig['linkedin']): void {
+        // Look at dynamic config + static specific directApply 
+        const applySelectors = [...dynamicSelectors.appLink, 'a[aria-label^="Apply on company website"]'];
+        const applyBtn = this._queryFirst(applySelectors) as HTMLAnchorElement | null;
+        
         if (applyBtn) {
             const url = new URL(applyBtn.href);
             if (url.hostname === 'www.linkedin.com' && url.pathname.includes('/redirect')) {
@@ -261,7 +270,7 @@ export class LinkedInScraper extends BaseScraper {
     private _scrapeLDJson(data: JobData): void {
         if (!data.appLink) {
             try {
-                const scripts = document.querySelectorAll(LINKEDIN_SELECTORS.ldJson);
+                const scripts = document.querySelectorAll('script[type="application/ld+json"]');
                 for (const script of scripts) {
                     try {
                         const json = JSON.parse((script as HTMLElement).innerText);
