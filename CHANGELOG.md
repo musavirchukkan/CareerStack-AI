@@ -1,3 +1,10 @@
+## [2.3.2](https://github.com/musavirchukkan/CareerStack-AI/compare/v2.3.1...v2.3.2) (2026-02-23)
+
+
+### Bug Fixes
+
+* trigger release pipeline ([cfdceb5](https://github.com/musavirchukkan/CareerStack-AI/commit/cfdceb52215d1962be6c54b4ea545cb767b79878))
+
 ## [2.3.1](https://github.com/musavirchukkan/CareerStack-AI/compare/v2.3.0...v2.3.1) (2026-02-23)
 
 

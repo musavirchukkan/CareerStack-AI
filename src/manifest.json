@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "CareerStack AI",
-    "version": "2.3.1",
+    "version": "2.3.2",
     "description": "AI-powered job application tracker for Notion.",
     "permissions": [
         "activeTab",
