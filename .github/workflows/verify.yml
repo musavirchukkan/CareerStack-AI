@@ -82,7 +82,7 @@ jobs:
         run: npm run build
 
   verify:
-    name: ✅ All Checks Passed
+    name: verify
     needs: [typecheck, test, format, lint, build]
     runs-on: ubuntu-latest
     steps:
