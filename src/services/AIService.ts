@@ -6,6 +6,7 @@ import type { AIServiceResult } from '../types';
 import { GeminiService } from './ai/GeminiService';
 import { OpenAIService } from './ai/OpenAIService';
 import { decryptData } from '../utils/encryption';
+import { CONFIG } from '../config/constants';
 
 const gemini = new GeminiService();
 const openai = new OpenAIService();
@@ -55,6 +56,29 @@ export class AIService {
         } catch (error) {
             console.error('AI Error:', error);
             return { error: (error as Error).message };
+        }
+    }
+
+    /**
+     * Verifies if the provided API key is valid for the selected provider.
+     */
+    static async verifyKey(provider: 'gemini' | 'openai', apiKey: string): Promise<boolean> {
+        try {
+            if (!apiKey) return false;
+
+            if (provider === 'gemini') {
+                const url = `${CONFIG.AI.GEMINI.ENDPOINT}/${CONFIG.AI.GEMINI.DEFAULT_MODEL}?key=${apiKey}`;
+                const res = await fetch(url, { method: 'GET' });
+                return res.ok;
+            } else {
+                const res = await fetch(CONFIG.AI.OPENAI.VERIFY_ENDPOINT, {
+                    headers: { 'Authorization': `Bearer ${apiKey}` }
+                });
+                return res.ok;
+            }
+        } catch (error) {
+            console.error(`${provider} validation failed:`, error);
+            return false;
         }
     }
 }
