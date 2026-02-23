@@ -2,316 +2,329 @@
  * NotionService — Encapsulates all Notion API logic,
  * including page creation and block construction.
  */
-import type { NotionSaveData, NotionSaveResult, DuplicateCheckResult, DescriptionBlock, NotionSchemaValidationResult } from '../types';
+import type {
+  NotionSaveData,
+  NotionSaveResult,
+  DuplicateCheckResult,
+  DescriptionBlock,
+  NotionSchemaValidationResult,
+} from '../types';
 import { fetchWithRetry, getReadableError } from '../utils/retry';
 import { decryptData } from '../utils/encryption';
 import { CONFIG } from '../config/constants';
 
 export class NotionService {
-    /**
-     * Checks if a job URL already exists in the Notion database.
-     * Queries the "Source URL" property.
-     */
-    static async checkDuplicate(jobUrl: string): Promise<DuplicateCheckResult> {
-        try {
-            const settings = await chrome.storage.sync.get(['notionSecret', 'databaseId']);
-            if (!settings.notionSecret || !settings.databaseId) {
-                return { isDuplicate: false };
-            }
-            const decryptedSecret = await decryptData(settings.notionSecret);
+  /**
+   * Checks if a job URL already exists in the Notion database.
+   * Queries the "Source URL" property.
+   */
+  static async checkDuplicate(jobUrl: string): Promise<DuplicateCheckResult> {
+    try {
+      const settings = await chrome.storage.sync.get(['notionSecret', 'databaseId']);
+      if (!settings.notionSecret || !settings.databaseId) {
+        return { isDuplicate: false };
+      }
+      const decryptedSecret = await decryptData(settings.notionSecret);
 
-            const response = await fetchWithRetry(
-                `${CONFIG.NOTION.BASE_URL}/databases/${settings.databaseId}/query`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${decryptedSecret}`,
-                        'Content-Type': 'application/json',
-                        'Notion-Version': CONFIG.NOTION.API_VERSION
-                    },
-                    body: JSON.stringify({
-                        filter: {
-                            property: 'Source URL',
-                            url: { equals: jobUrl }
-                        },
-                        page_size: 1
-                    })
-                }
-            );
+      const response = await fetchWithRetry(
+        `${CONFIG.NOTION.BASE_URL}/databases/${settings.databaseId}/query`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${decryptedSecret}`,
+            'Content-Type': 'application/json',
+            'Notion-Version': CONFIG.NOTION.API_VERSION,
+          },
+          body: JSON.stringify({
+            filter: {
+              property: 'Source URL',
+              url: { equals: jobUrl },
+            },
+            page_size: 1,
+          }),
+        },
+      );
 
-            if (!response.ok) {
-                // Don't block saving if duplicate check fails
-                console.warn('Duplicate check failed:', response.status);
-                return { isDuplicate: false };
-            }
+      if (!response.ok) {
+        // Don't block saving if duplicate check fails
+        console.warn('Duplicate check failed:', response.status);
+        return { isDuplicate: false };
+      }
 
-            const data = await response.json();
-            if (data.results && data.results.length > 0) {
-                const existingPage = data.results[0];
-                const pageUrl = existingPage.url || `https://notion.so/${existingPage.id.replace(/-/g, '')}`;
-                return { isDuplicate: true, existingUrl: pageUrl };
-            }
+      const data = await response.json();
+      if (data.results && data.results.length > 0) {
+        const existingPage = data.results[0];
+        const pageUrl =
+          existingPage.url || `https://notion.so/${existingPage.id.replace(/-/g, '')}`;
+        return { isDuplicate: true, existingUrl: pageUrl };
+      }
 
-            return { isDuplicate: false };
-        } catch (error) {
-            console.warn('Duplicate check error:', error);
-            return { isDuplicate: false };
-        }
+      return { isDuplicate: false };
+    } catch (error) {
+      console.warn('Duplicate check error:', error);
+      return { isDuplicate: false };
     }
+  }
 
-    /**
-     * Validates that the target Notion Database contains all required
-     * properties with the correct types.
-     */
-    static async validateSchema(databaseId: string, secret: string): Promise<NotionSchemaValidationResult> {
-        try {
-            const response = await fetchWithRetry(
-                `${CONFIG.NOTION.BASE_URL}/databases/${databaseId}`,
-                {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${secret}`,
-                        'Notion-Version': CONFIG.NOTION.API_VERSION
-                    }
-                }
-            );
+  /**
+   * Validates that the target Notion Database contains all required
+   * properties with the correct types.
+   */
+  static async validateSchema(
+    databaseId: string,
+    secret: string,
+  ): Promise<NotionSchemaValidationResult> {
+    try {
+      const response = await fetchWithRetry(`${CONFIG.NOTION.BASE_URL}/databases/${databaseId}`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${secret}`,
+          'Notion-Version': CONFIG.NOTION.API_VERSION,
+        },
+      });
 
-            if (!response.ok) {
-                const resData = await response.json();
-                return { 
-                    isConnectionValid: false,
-                    isValid: false, 
-                    errors: [`Failed to query database: ${resData.message || response.statusText}`] 
-                };
-            }
-
-            const data = await response.json();
-            const properties = data.properties || {};
-
-            const expectedSchema: Record<string, string> = {
-                'Company': 'title',
-                'Position': 'rich_text',
-                'Status': 'status',
-                'Platform': 'select',
-                'Salary': 'rich_text',
-                'Source URL': 'url',
-                'Apply Link': 'url',
-                'Email': 'email',
-                'Match Score': 'number',
-                'Application Date': 'date'
-            };
-
-            const errors: string[] = [];
-
-            for (const [propName, expectedType] of Object.entries(expectedSchema)) {
-                if (!properties[propName]) {
-                    errors.push(`Missing property: "${propName}" (expected type: ${expectedType})`);
-                } else if (properties[propName].type !== expectedType) {
-                    errors.push(`Incorrect type for "${propName}": expected ${expectedType}, but found ${properties[propName].type}`);
-                }
-            }
-
-            return {
-                isConnectionValid: true,
-                isValid: errors.length === 0,
-                errors
-            };
-
-        } catch (error) {
-            console.error('Schema Validation Error:', error);
-            return { 
-                isConnectionValid: false,
-                isValid: false, 
-                errors: [`Network or API error during validation: ${(error as Error).message}`] 
-            };
-        }
-    }
-
-    /**
-     * Saves job data to the user's Notion database.
-     * Retries on transient failures with exponential backoff.
-     */
-    static async save(data: NotionSaveData): Promise<NotionSaveResult> {
-        try {
-            const settings = await chrome.storage.sync.get(['notionSecret', 'databaseId']);
-            if (!settings.notionSecret || !settings.databaseId) {
-                return { error: 'Missing Notion settings. Please configure in Options.' };
-            }
-            const decryptedSecret = await decryptData(settings.notionSecret);
-
-            const today = new Date().toISOString().split('T')[0];
-
-            const body: Record<string, unknown> = {
-                parent: { database_id: settings.databaseId },
-                properties: {
-                    'Company': {
-                        title: [{
-                            text: {
-                                content: data.company || 'Unknown Company',
-                                link: data.companyUrl ? { url: data.companyUrl } : null
-                            }
-                        }]
-                    },
-                    'Position': { rich_text: [{ text: { content: data.position || 'Unknown Position' } }] },
-                    'Status': { status: { name: data.status || 'Not Applied' } },
-                    'Platform': { select: { name: data.platform || 'Other' } },
-                    'Salary': { rich_text: [{ text: { content: data.salary || '' } }] },
-                    'Source URL': { url: data.link || null },
-                    'Apply Link': { url: data.appLink || null },
-                    'Email': { email: data.email || null },
-                    'Match Score': { number: parseInt(data.score || '0') || 0 },
-                    'Application Date': { date: { start: today } }
-                },
-                children: [
-                    {
-                        object: 'block',
-                        type: 'heading_2',
-                        heading_2: {
-                            rich_text: [{ text: { content: 'Job Description' } }]
-                        }
-                    }
-                ]
-            };
-
-            const children = body.children as Record<string, unknown>[];
-
-            // Add description blocks
-            if (data.descriptionBlocks && data.descriptionBlocks.length > 0) {
-                const notionBlocks = data.descriptionBlocks
-                    .map(b => NotionService.createBlock(b))
-                    .filter((b): b is Record<string, unknown> => b !== null);
-                children.push(...notionBlocks);
-            } else {
-                children.push(...NotionService.chunkTextToBlocks(data.description));
-            }
-
-            // Add summary if available
-            if (data.summary) {
-                children.push({
-                    object: 'block',
-                    type: 'heading_2',
-                    heading_2: {
-                        rich_text: [{ text: { content: 'AI Summary' } }]
-                    }
-                });
-                children.push({
-                    object: 'block',
-                    type: 'paragraph',
-                    paragraph: {
-                        rich_text: [{ text: { content: data.summary } }]
-                    }
-                });
-            }
-
-            const response = await fetchWithRetry(`${CONFIG.NOTION.BASE_URL}/pages`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${decryptedSecret}`,
-                    'Content-Type': 'application/json',
-                    'Notion-Version': CONFIG.NOTION.API_VERSION
-                },
-                body: JSON.stringify(body)
-            });
-
-            const resData = await response.json();
-            if (!response.ok) {
-                return { error: getReadableError('Notion', response.status, resData.message) };
-            }
-
-            const pageUrl = resData.url || `https://notion.so/${resData.id.replace(/-/g, '')}`;
-            return { success: true, url: pageUrl };
-
-        } catch (error) {
-            console.error('Notion Error:', error);
-            return { error: (error as Error).message };
-        }
-    }
-
-    /**
-     * Converts a scraped block into a Notion API block object.
-     */
-    static createBlock(block: DescriptionBlock): Record<string, unknown> | null {
-        if (!block) return null;
-
-        let notionRichText: Record<string, unknown>[];
-
-        if (block.richText && Array.isArray(block.richText)) {
-            notionRichText = block.richText.map(segment => ({
-                type: 'text',
-                text: { content: segment.text.substring(0, 2000) },
-                annotations: {
-                    bold: segment.annotations ? segment.annotations.bold : false,
-                    italic: segment.annotations ? segment.annotations.italic : false
-                }
-            }));
-        } else if (block.content) {
-            notionRichText = [{
-                type: 'text',
-                text: { content: block.content.substring(0, 2000) }
-            }];
-        } else {
-            return null;
-        }
-
-        if (block.type === 'heading_2') {
-            return {
-                object: 'block',
-                type: 'heading_3',
-                heading_3: { rich_text: notionRichText }
-            };
-        }
-
-        if (block.type === 'bulleted_list_item') {
-            return {
-                object: 'block',
-                type: 'bulleted_list_item',
-                bulleted_list_item: { rich_text: notionRichText }
-            };
-        }
-
-        // Default: paragraph
+      if (!response.ok) {
+        const resData = await response.json();
         return {
-            object: 'block',
-            type: 'paragraph',
-            paragraph: { rich_text: notionRichText }
+          isConnectionValid: false,
+          isValid: false,
+          errors: [`Failed to query database: ${resData.message || response.statusText}`],
         };
-    }
+      }
 
-    /**
-     * Splits plain text into paragraph blocks that fit Notion's 2000 char limit.
-     */
-    static chunkTextToBlocks(text: string): Record<string, unknown>[] {
-        if (!text) return [];
-        const blocks: Record<string, unknown>[] = [];
-        const chunkSize = 2000;
+      const data = await response.json();
+      const properties = data.properties || {};
 
-        for (let i = 0; i < text.length;) {
-            const limit = Math.min(i + chunkSize, text.length);
-            let end = limit;
+      const expectedSchema: Record<string, string> = {
+        Company: 'title',
+        Position: 'rich_text',
+        Status: 'status',
+        Platform: 'select',
+        Salary: 'rich_text',
+        'Source URL': 'url',
+        'Apply Link': 'url',
+        Email: 'email',
+        'Match Score': 'number',
+        'Application Date': 'date',
+      };
 
-            if (end < text.length) {
-                const lastNewline = text.lastIndexOf('\n', end);
-                if (lastNewline > i) {
-                    end = lastNewline + 1;
-                } else {
-                    const lastSpace = text.lastIndexOf(' ', end);
-                    if (lastSpace > i) {
-                        end = lastSpace + 1;
-                    }
-                }
-            }
+      const errors: string[] = [];
 
-            const chunk = text.substring(i, end);
-            blocks.push({
-                object: 'block',
-                type: 'paragraph',
-                paragraph: {
-                    rich_text: [{ text: { content: chunk } }]
-                }
-            });
-
-            i = end;
+      for (const [propName, expectedType] of Object.entries(expectedSchema)) {
+        if (!properties[propName]) {
+          errors.push(`Missing property: "${propName}" (expected type: ${expectedType})`);
+        } else if (properties[propName].type !== expectedType) {
+          errors.push(
+            `Incorrect type for "${propName}": expected ${expectedType}, but found ${properties[propName].type}`,
+          );
         }
-        return blocks;
+      }
+
+      return {
+        isConnectionValid: true,
+        isValid: errors.length === 0,
+        errors,
+      };
+    } catch (error) {
+      console.error('Schema Validation Error:', error);
+      return {
+        isConnectionValid: false,
+        isValid: false,
+        errors: [`Network or API error during validation: ${(error as Error).message}`],
+      };
     }
+  }
+
+  /**
+   * Saves job data to the user's Notion database.
+   * Retries on transient failures with exponential backoff.
+   */
+  static async save(data: NotionSaveData): Promise<NotionSaveResult> {
+    try {
+      const settings = await chrome.storage.sync.get(['notionSecret', 'databaseId']);
+      if (!settings.notionSecret || !settings.databaseId) {
+        return { error: 'Missing Notion settings. Please configure in Options.' };
+      }
+      const decryptedSecret = await decryptData(settings.notionSecret);
+
+      const today = new Date().toISOString().split('T')[0];
+
+      const body: Record<string, unknown> = {
+        parent: { database_id: settings.databaseId },
+        properties: {
+          Company: {
+            title: [
+              {
+                text: {
+                  content: data.company || 'Unknown Company',
+                  link: data.companyUrl ? { url: data.companyUrl } : null,
+                },
+              },
+            ],
+          },
+          Position: {
+            rich_text: [{ text: { content: data.position || 'Unknown Position' } }],
+          },
+          Status: { status: { name: data.status || 'Not Applied' } },
+          Platform: { select: { name: data.platform || 'Other' } },
+          Salary: { rich_text: [{ text: { content: data.salary || '' } }] },
+          'Source URL': { url: data.link || null },
+          'Apply Link': { url: data.appLink || null },
+          Email: { email: data.email || null },
+          'Match Score': { number: parseInt(data.score || '0') || 0 },
+          'Application Date': { date: { start: today } },
+        },
+        children: [
+          {
+            object: 'block',
+            type: 'heading_2',
+            heading_2: {
+              rich_text: [{ text: { content: 'Job Description' } }],
+            },
+          },
+        ],
+      };
+
+      const children = body.children as Record<string, unknown>[];
+
+      // Add description blocks
+      if (data.descriptionBlocks && data.descriptionBlocks.length > 0) {
+        const notionBlocks = data.descriptionBlocks
+          .map((b) => NotionService.createBlock(b))
+          .filter((b): b is Record<string, unknown> => b !== null);
+        children.push(...notionBlocks);
+      } else {
+        children.push(...NotionService.chunkTextToBlocks(data.description));
+      }
+
+      // Add summary if available
+      if (data.summary) {
+        children.push({
+          object: 'block',
+          type: 'heading_2',
+          heading_2: {
+            rich_text: [{ text: { content: 'AI Summary' } }],
+          },
+        });
+        children.push({
+          object: 'block',
+          type: 'paragraph',
+          paragraph: {
+            rich_text: [{ text: { content: data.summary } }],
+          },
+        });
+      }
+
+      const response = await fetchWithRetry(`${CONFIG.NOTION.BASE_URL}/pages`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${decryptedSecret}`,
+          'Content-Type': 'application/json',
+          'Notion-Version': CONFIG.NOTION.API_VERSION,
+        },
+        body: JSON.stringify(body),
+      });
+
+      const resData = await response.json();
+      if (!response.ok) {
+        return { error: getReadableError('Notion', response.status, resData.message) };
+      }
+
+      const pageUrl = resData.url || `https://notion.so/${resData.id.replace(/-/g, '')}`;
+      return { success: true, url: pageUrl };
+    } catch (error) {
+      console.error('Notion Error:', error);
+      return { error: (error as Error).message };
+    }
+  }
+
+  /**
+   * Converts a scraped block into a Notion API block object.
+   */
+  static createBlock(block: DescriptionBlock): Record<string, unknown> | null {
+    if (!block) return null;
+
+    let notionRichText: Record<string, unknown>[];
+
+    if (block.richText && Array.isArray(block.richText)) {
+      notionRichText = block.richText.map((segment) => ({
+        type: 'text',
+        text: { content: segment.text.substring(0, 2000) },
+        annotations: {
+          bold: segment.annotations ? segment.annotations.bold : false,
+          italic: segment.annotations ? segment.annotations.italic : false,
+        },
+      }));
+    } else if (block.content) {
+      notionRichText = [
+        {
+          type: 'text',
+          text: { content: block.content.substring(0, 2000) },
+        },
+      ];
+    } else {
+      return null;
+    }
+
+    if (block.type === 'heading_2') {
+      return {
+        object: 'block',
+        type: 'heading_3',
+        heading_3: { rich_text: notionRichText },
+      };
+    }
+
+    if (block.type === 'bulleted_list_item') {
+      return {
+        object: 'block',
+        type: 'bulleted_list_item',
+        bulleted_list_item: { rich_text: notionRichText },
+      };
+    }
+
+    // Default: paragraph
+    return {
+      object: 'block',
+      type: 'paragraph',
+      paragraph: { rich_text: notionRichText },
+    };
+  }
+
+  /**
+   * Splits plain text into paragraph blocks that fit Notion's 2000 char limit.
+   */
+  static chunkTextToBlocks(text: string): Record<string, unknown>[] {
+    if (!text) return [];
+    const blocks: Record<string, unknown>[] = [];
+    const chunkSize = 2000;
+
+    for (let i = 0; i < text.length; ) {
+      const limit = Math.min(i + chunkSize, text.length);
+      let end = limit;
+
+      if (end < text.length) {
+        const lastNewline = text.lastIndexOf('\n', end);
+        if (lastNewline > i) {
+          end = lastNewline + 1;
+        } else {
+          const lastSpace = text.lastIndexOf(' ', end);
+          if (lastSpace > i) {
+            end = lastSpace + 1;
+          }
+        }
+      }
+
+      const chunk = text.substring(i, end);
+      blocks.push({
+        object: 'block',
+        type: 'paragraph',
+        paragraph: {
+          rich_text: [{ text: { content: chunk } }],
+        },
+      });
+
+      i = end;
+    }
+    return blocks;
+  }
 }

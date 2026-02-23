@@ -37,4 +37,4 @@ What's coming next for CareerStack AI. Feature priorities may shift based on use
 
 ---
 
-*Last updated: February 2026*
+_Last updated: February 2026_

@@ -4,21 +4,42 @@
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
     "@semantic-release/changelog",
-    ["@semantic-release/npm", {
-      "npmPublish": false
-    }],
-    ["@semantic-release/exec", {
-      "prepareCmd": "node -e \"const fs=require('fs'); ['src/manifest.json','src/config/selectors.json'].forEach(f=>{const d=JSON.parse(fs.readFileSync(f));d.version='${nextRelease.version}';fs.writeFileSync(f,JSON.stringify(d,null,4));});\" && npm run zip",
-      "successCmd": "echo 'released=true' >> $GITHUB_OUTPUT"
-    }],
-    ["@semantic-release/git", {
-      "assets": ["package.json", "package-lock.json", "src/manifest.json", "src/config/selectors.json", "CHANGELOG.md"],
-      "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
-    }],
-    ["@semantic-release/github", {
-      "assets": [
-        { "path": "extension.zip", "label": "CareerStack Extension v${nextRelease.version}" }
-      ]
-    }]
+    [
+      "@semantic-release/npm",
+      {
+        "npmPublish": false
+      }
+    ],
+    [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "node -e \"const fs=require('fs'); ['src/manifest.json','src/config/selectors.json'].forEach(f=>{const d=JSON.parse(fs.readFileSync(f));d.version='${nextRelease.version}';fs.writeFileSync(f,JSON.stringify(d,null,4));});\" && npm run zip",
+        "successCmd": "echo 'released=true' >> $GITHUB_OUTPUT"
+      }
+    ],
+    [
+      "@semantic-release/git",
+      {
+        "assets": [
+          "package.json",
+          "package-lock.json",
+          "src/manifest.json",
+          "src/config/selectors.json",
+          "CHANGELOG.md"
+        ],
+        "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+      }
+    ],
+    [
+      "@semantic-release/github",
+      {
+        "assets": [
+          {
+            "path": "extension.zip",
+            "label": "CareerStack Extension v${nextRelease.version}"
+          }
+        ]
+      }
+    ]
   ]
 }

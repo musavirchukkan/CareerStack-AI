@@ -168,9 +168,14 @@ export interface CheckDuplicateMessage {
   url: string;
 }
 
-export type ExtensionMessage = ScrapeJobMessage | AnalyzeJobMessage | SaveToNotionMessage | CheckDuplicateMessage | {
-  action: 'GET_SELECTORS';
-};
+export type ExtensionMessage =
+  | ScrapeJobMessage
+  | AnalyzeJobMessage
+  | SaveToNotionMessage
+  | CheckDuplicateMessage
+  | {
+      action: 'GET_SELECTORS';
+    };
 
 // ─── Settings ───────────────────────────────────────────────────
 
