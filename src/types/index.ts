@@ -74,6 +74,21 @@ export interface NotionSaveData {
   summary?: string;
 }
 
+export interface SelectorConfig {
+  company: string[];
+  companyUrl: string[];
+  position: string[];
+  appLink: string[];
+  salary: string[];
+  description: string[];
+}
+
+export interface RemoteConfig {
+  version: string;
+  linkedin: SelectorConfig;
+  indeed: SelectorConfig;
+}
+
 export interface NotionSaveResult {
   success?: boolean;
   error?: string;
@@ -118,11 +133,12 @@ export interface LinkedInSelectors {
 }
 
 export interface IndeedSelectors {
-  readonly title: SelectorList;
+  readonly position: SelectorList;
   readonly company: SelectorList;
+  readonly companyUrl: SelectorList;
   readonly salary: SelectorList;
   readonly description: SelectorList;
-  readonly apply: SelectorList;
+  readonly appLink: SelectorList;
 }
 
 // ─── Chrome Messages ────────────────────────────────────────────
@@ -146,7 +162,9 @@ export interface CheckDuplicateMessage {
   url: string;
 }
 
-export type ExtensionMessage = ScrapeJobMessage | AnalyzeJobMessage | SaveToNotionMessage | CheckDuplicateMessage;
+export type ExtensionMessage = ScrapeJobMessage | AnalyzeJobMessage | SaveToNotionMessage | CheckDuplicateMessage | {
+  action: 'GET_SELECTORS';
+};
 
 // ─── Settings ───────────────────────────────────────────────────
 

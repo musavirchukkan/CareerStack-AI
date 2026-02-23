@@ -2,7 +2,7 @@
  * BaseScraper — Abstract base class for job page scrapers.
  * All platform-specific scrapers must extend this class.
  */
-import type { JobData, SelectorList } from '../types';
+import type { JobData, SelectorList, RemoteConfig } from '../types';
 
 export abstract class BaseScraper {
     /**
@@ -13,7 +13,7 @@ export abstract class BaseScraper {
     /**
      * Scrapes job data from the current page.
      */
-    abstract scrape(data: JobData): JobData;
+    abstract scrape(data: JobData, config?: RemoteConfig): JobData;
 
     /**
      * Tries an array of CSS selectors in order and returns the first matching element.

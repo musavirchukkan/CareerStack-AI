@@ -3,6 +3,7 @@
  */
 import type { AIServiceResult } from '../../types';
 import { fetchWithRetry, getReadableError } from '../../utils/retry';
+import { CONFIG } from '../../config/constants';
 
 export class OpenAIService {
     /**
@@ -10,7 +11,7 @@ export class OpenAIService {
      * Retries on transient failures with exponential backoff.
      */
     async analyze(apiKey: string, prompt: string): Promise<AIServiceResult> {
-        const url = 'https://api.openai.com/v1/chat/completions';
+        const url = CONFIG.AI.OPENAI.ENDPOINT;
 
         const response = await fetchWithRetry(url, {
             method: 'POST',
@@ -19,7 +20,7 @@ export class OpenAIService {
                 'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify({
-                model: 'gpt-4o-mini',
+                model: CONFIG.AI.OPENAI.DEFAULT_MODEL,
                 messages: [{ role: 'user', content: prompt }],
                 response_format: { type: 'json_object' },
                 temperature: 0.1

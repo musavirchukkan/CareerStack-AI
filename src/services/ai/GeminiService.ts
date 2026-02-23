@@ -3,6 +3,7 @@
  */
 import type { AIServiceResult } from '../../types';
 import { fetchWithRetry, getReadableError } from '../../utils/retry';
+import { CONFIG } from '../../config/constants';
 
 export class GeminiService {
     /**
@@ -10,7 +11,8 @@ export class GeminiService {
      * Retries on transient failures with exponential backoff.
      */
     async analyze(apiKey: string, prompt: string): Promise<AIServiceResult> {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
+        const { ENDPOINT, DEFAULT_MODEL } = CONFIG.AI.GEMINI;
+        const url = `${ENDPOINT}/${DEFAULT_MODEL}:generateContent?key=${apiKey}`;
 
         const response = await fetchWithRetry(url, {
             method: 'POST',
