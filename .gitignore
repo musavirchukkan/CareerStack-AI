@@ -24,6 +24,5 @@ Archive.zip
 *.swo
 
 # Internal docs (not shipped)
-PRODUCTION_CHECKLIST.md
 CHROME_STORE_AUTO_PUBLISH.md
-ISSUES.md
+TODO.md

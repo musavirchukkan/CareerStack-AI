@@ -80,6 +80,8 @@ jobs:
         run: npm ci
       - name: 🏗️ Build Extension
         run: npm run build
+        env:
+          VITE_SENTRY_DSN: ${{ vars.VITE_SENTRY_DSN }}
 
   verify:
     name: verify
