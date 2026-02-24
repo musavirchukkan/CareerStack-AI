@@ -25,5 +25,4 @@ Archive.zip
 *.swo
 
 # Internal docs (not shipped)
-CHROME_STORE_AUTO_PUBLISH.md
 # TODO.md
