@@ -46,3 +46,13 @@ jobs:
           gist_id: ${{ vars.GIST_ID }}
           gist_file_name: selectors.json
           file_path: src/config/selectors.json
+
+#      - name: 🚀 Upload to Chrome Web Store
+#        if: steps.release.outputs.released == 'true'
+#        uses: mnao305/chrome-extension-upload@v5.0.0
+#        with:
+#          file-path: extension.zip
+#          extension-id: ${{ vars.CHROME_EXTENSION_ID }}
+#          client-id: ${{ vars.CHROME_CLIENT_ID }}
+#          client-secret: ${{ secrets.CHROME_CLIENT_SECRET }}
+#          refresh-token: ${{ secrets.CHROME_REFRESH_TOKEN }}

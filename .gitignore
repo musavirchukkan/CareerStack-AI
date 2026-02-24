@@ -7,6 +7,7 @@ dist/
 # Environment
 .env
 .env.local
+Google OAuth.json
 
 # OS files
 .DS_Store
@@ -25,4 +26,4 @@ Archive.zip
 
 # Internal docs (not shipped)
 CHROME_STORE_AUTO_PUBLISH.md
-TODO.md
+# TODO.md
