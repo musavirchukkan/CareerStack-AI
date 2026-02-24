@@ -38,6 +38,7 @@
 | 🧠 **Resume Matching**     | Compares your master resume against each job posting and scores the match                                        |
 | 💾 **Smart Caching**       | Caches scrape and AI results in session storage, so switching tabs doesn't lose your work                        |
 | 🔒 **Privacy-First**       | All API keys and data stay in your browser's local storage — nothing is sent to our servers                      |
+| 🛠️ **Error Tracking**      | Automatically tracks parsing/scraping breaks and uncaught application exceptions via Sentry.                     |
 
 ---
 
@@ -154,6 +155,12 @@ Your key is stored locally and never sent to our servers.
 ### 3. Master Resume
 
 Paste your full resume as plain text or markdown. The AI uses this to compare your profile against job descriptions and generate match scores.
+
+### 4. Sentry (Error Tracking)
+
+If you are developing or hosting your own version, errors are tracked using **Sentry**.
+
+Set your `VITE_SENTRY_DSN` in an `.env` file at the root of the project to forward bug and parser crash reports directly to your dashboard. For detailed instructions, see [docs/SENTRY_SETUP.md](docs/SENTRY_SETUP.md).
 
 ---
 

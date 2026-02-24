@@ -8,7 +8,11 @@ import type { JobData } from './types';
 import { BaseScraper } from './scrapers/BaseScraper';
 import { LinkedInScraper } from './scrapers/LinkedInScraper';
 import { IndeedScraper } from './scrapers/IndeedScraper';
+import { SentryService } from './services/SentryService';
 import { sanitizeText } from './utils/dom-utils';
+
+// Initialize error tracking
+SentryService.init();
 
 /**
  * Returns the appropriate scraper for the current URL, or null if unsupported.
@@ -66,6 +70,11 @@ async function scrapeJobData(): Promise<JobData> {
       return result;
     } catch (error) {
       console.error('Scraping error:', error);
+      SentryService.captureException(error, {
+        url,
+        scraper: scraper.constructor.name,
+        action: 'scrapeJobData',
+      });
       data.warnings = ['A critical error occurred while scraping. Some fields may be missing.'];
       return data;
     }

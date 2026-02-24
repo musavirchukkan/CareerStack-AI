@@ -261,20 +261,38 @@ export class LinkedInScraper extends BaseScraper {
   }
 
   private _scrapeDirectApplyLink(data: JobData, dynamicSelectors: RemoteConfig['linkedin']): void {
-    // Look at dynamic config + static specific directApply
-    const applySelectors = [
-      ...dynamicSelectors.appLink,
-      'a[aria-label^="Apply on company website"]',
-    ];
-    const applyBtn = this._queryFirst(applySelectors) as HTMLAnchorElement | null;
+    let applyUrl = data.appLink;
 
-    if (applyBtn) {
-      const url = new URL(applyBtn.href);
-      if (url.hostname === 'www.linkedin.com' && url.pathname.includes('/redirect')) {
-        const target = url.searchParams.get('url');
-        if (target) data.appLink = target;
-      } else {
-        data.appLink = applyBtn.href;
+    if (!applyUrl) {
+      // Look at dynamic config + static specific directApply
+      const applySelectors = [
+        ...dynamicSelectors.appLink,
+        'a[aria-label^="Apply on company website"]',
+      ];
+
+      for (const selector of applySelectors) {
+        const el = document.querySelector(selector);
+        if (el) {
+          const anchor = el.tagName === 'A' ? (el as HTMLAnchorElement) : el.closest('a');
+          if (anchor && anchor.href) {
+            applyUrl = anchor.href;
+            break;
+          }
+        }
+      }
+    }
+
+    if (applyUrl) {
+      try {
+        const url = new URL(applyUrl);
+        if (url.hostname === 'www.linkedin.com' && url.pathname.includes('/redirect')) {
+          const target = url.searchParams.get('url');
+          if (target) data.appLink = target;
+        } else {
+          data.appLink = applyUrl;
+        }
+      } catch (e) {
+        console.warn('Failed to parse apply URL:', e);
       }
     }
   }

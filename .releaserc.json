@@ -13,7 +13,7 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "node -e \"const fs=require('fs'); ['src/manifest.json','src/config/selectors.json'].forEach(f=>{const d=JSON.parse(fs.readFileSync(f));d.version='${nextRelease.version}';fs.writeFileSync(f,JSON.stringify(d,null,4));});\" && npm run zip",
+        "prepareCmd": "node -e \"const fs=require('fs'); ['src/manifest.json','src/config/selectors.json'].forEach(f=>{const d=JSON.parse(fs.readFileSync(f));d.version='${nextRelease.version}';fs.writeFileSync(f,JSON.stringify(d,null,4));});\" && npm run format && npm run zip",
         "successCmd": "echo 'released=true' >> $GITHUB_OUTPUT"
       }
     ],

@@ -7,11 +7,18 @@
 import { AIService } from './services/AIService';
 import { NotionService } from './services/NotionService';
 import { ConfigService } from './services/ConfigService';
+import { SentryService } from './services/SentryService';
 import type { ExtensionMessage } from './types';
+
+// Initialize Sentry error tracking
+SentryService.init();
 
 // Setup periodic fetch for dynamic scrapers over the air updates
 chrome.runtime.onInstalled.addListener((details) => {
-  ConfigService.fetchAndCache().catch(console.error);
+  ConfigService.fetchAndCache().catch((err) => {
+    SentryService.captureException(err, { context: 'ConfigService.fetchAndCache (onInstalled)' });
+    console.error(err);
+  });
   chrome.alarms.create('refresh-selectors', { periodInMinutes: 360 }); // 6 hours
 
   if (details.reason === chrome.runtime.OnInstalledReason.INSTALL) {
@@ -21,7 +28,10 @@ chrome.runtime.onInstalled.addListener((details) => {
 
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === 'refresh-selectors') {
-    ConfigService.fetchAndCache().catch(console.error);
+    ConfigService.fetchAndCache().catch((err) => {
+      SentryService.captureException(err, { context: 'ConfigService.fetchAndCache (alarm)' });
+      console.error(err);
+    });
   }
 });
 
