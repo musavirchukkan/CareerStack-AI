@@ -1,9 +1,8 @@
 # [2.4.0](https://github.com/musavirchukkan/CareerStack-AI/compare/v2.3.2...v2.4.0) (2026-02-23)
 
-
 ### Features
 
-* add settings icon in popup to open options page ([#12](https://github.com/musavirchukkan/CareerStack-AI/issues/12)) ([859b329](https://github.com/musavirchukkan/CareerStack-AI/commit/859b329b4f72885bf746530bd2930620f5cf20de))
+- add settings icon in popup to open options page ([#12](https://github.com/musavirchukkan/CareerStack-AI/issues/12)) ([859b329](https://github.com/musavirchukkan/CareerStack-AI/commit/859b329b4f72885bf746530bd2930620f5cf20de))
 
 ## [2.3.2](https://github.com/musavirchukkan/CareerStack-AI/compare/v2.3.1...v2.3.2) (2026-02-23)
 
