@@ -1,3 +1,9 @@
+# [2.5.0](https://github.com/musavirchukkan/CareerStack-AI/compare/v2.4.0...v2.5.0) (2026-02-24)
+
+### Features
+
+- **core:** implement Sentry error tracking, selector validation, and CI publish prep ([#13](https://github.com/musavirchukkan/CareerStack-AI/issues/13)) ([09b7f33](https://github.com/musavirchukkan/CareerStack-AI/commit/09b7f3302fafba38eed0e11619378648264c743d)), closes [Hi#Priority](https://github.com/Hi/issues/Priority)
+
 # [2.4.0](https://github.com/musavirchukkan/CareerStack-AI/compare/v2.3.2...v2.4.0) (2026-02-23)
 
 ### Features
